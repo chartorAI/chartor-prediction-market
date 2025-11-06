@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+contract/node_modules/
+
+# Environment variables
+.env
+contract/.env
+
+# Hardhat files
+cache/
+artifacts/
+contract/cache/
+contract/artifacts/
+
+# TypeChain
+typechain/
+typechain-types/
+contract/typechain/
+contract/typechain-types/
+
+# Coverage reports
+coverage/
+coverage.json
+contract/coverage/
+contract/coverage.json
+
+# Gas reports
+gas-report.txt
+contract/gas-report.txt
+
+# Deployment artifacts
+deployments/
+contract/deployments/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+contract/dist/
+contract/build/
+
+# Temporary files
+*.tmp
+*.temp
+
+plan
