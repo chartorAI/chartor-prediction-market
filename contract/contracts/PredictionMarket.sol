@@ -535,27 +535,27 @@ contract PredictionMarket is Ownable {
     // ============ Oracle Integration Functions ============
 
     function _initializePythFeeds() internal {
-        // BTC/USD feed ID
+        // BTC/USD 
         pythFeeds[
             "BTC"
         ] = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
 
-        // ETH/USD feed ID
+        // ETH/USD 
         pythFeeds[
             "ETH"
         ] = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
 
-        // BNB/USD feed ID
+        // BNB/USD 
         pythFeeds[
             "BNB"
         ] = 0x2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f;
 
-        // GOLD/USD feed ID
+        // XAU/USD (Gold) 
         pythFeeds[
             "GOLD"
         ] = 0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2;
 
-        // OIL/USD feed ID 
+        // WTI Crude Oil USD feed ID 
         pythFeeds[
             "OIL"
         ] = 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b;
