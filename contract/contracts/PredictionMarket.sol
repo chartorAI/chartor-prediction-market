@@ -3,110 +3,82 @@ pragma solidity ^0.8.20;
 
 import "./LMSRMath.sol";
 
-/**
- * @title IPyth
- * @dev Interface for Pyth Network oracle on BNB Testnet
- * Direct contract integration without SDK dependency
- */
 interface IPyth {
     struct Price {
-        int64 price; // Price value
-        uint64 conf; // Confidence interval
-        int32 expo; // Price exponent
-        uint256 publishTime; // Timestamp of price update
+        int64 price;
+        uint64 conf;
+        int32 expo;
+        uint256 publishTime;
     }
 
-    /**
-     * @dev Get price data for a given feed ID (unsafe - may return stale data)
-     * @param id Pyth feed ID for the asset
-     * @return price Price struct containing price data
-     */
     function getPriceUnsafe(
         bytes32 id
     ) external view returns (Price memory price);
 
-    /**
-     * @dev Get price data for a given feed ID (safe - reverts on stale data)
-     * @param id Pyth feed ID for the asset
-     * @return price Price struct containing price data
-     */
     function getPrice(bytes32 id) external view returns (Price memory price);
 }
 
 /**
- * @title PredictionMarketHub
+ * @title PredictionMarket
  * @dev Multi-market prediction market hub implementing LMSR mechanics with automatic payouts
  * Handles multiple price-based prediction markets with whale tracking and participant management
  * Single contract deployment supports unlimited markets
  */
-contract PredictionMarketHub {
+contract PredictionMarket {
     using LMSRMath for uint256;
 
     // ============ Constants ============
 
-    /// @dev BNB Testnet Pyth contract address
     IPyth public constant PYTH_ORACLE =
         IPyth(0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb);
 
-    /// @dev Maximum age for price data (5 minutes)
     uint256 public constant MAX_PRICE_AGE = 300;
 
-    /// @dev Supported Pyth feed IDs for different assets
     mapping(string => bytes32) public pythFeeds;
 
     // ============ State Variables ============
 
-    /// @dev Market configuration per market ID
     struct MarketConfig {
-        bytes32 pythFeedId; // Pyth oracle feed ID for price resolution
-        uint256 targetPrice; // Target price for market resolution (scaled by 1e18)
-        uint256 deadline; // Market deadline timestamp
-        uint256 liquidityParam; // LMSR liquidity parameter 'b'
-        string description; // Market description
-        address creator; // Market creator address
-        bool exists; // Whether market exists
+        bytes32 pythFeedId;
+        uint256 targetPrice;
+        uint256 deadline;
+        uint256 liquidityParam;
+        string description;
+        address creator;
+        bool exists;
     }
 
-    /// @dev Individual trader position per market
     struct Position {
-        uint256 yesShares; // Number of YES shares owned
-        uint256 noShares; // Number of NO shares owned
-        uint256 totalStaked; // Total amount invested by this trader
+        uint256 yesShares;
+        uint256 noShares;
+        uint256 totalStaked;
     }
 
-    /// @dev Whale tracking information per market
     struct WhaleInfo {
-        address whale; // Whale's address
-        uint256 amount; // Bet amount in wei
-        uint256 timestamp; // When the bet was placed
+        address whale;
+        uint256 amount;
+        uint256 timestamp;
     }
 
-    /// @dev Market counter for unique IDs
     uint256 public marketCounter;
 
-    /// @dev Market configurations by ID
     mapping(uint256 => MarketConfig) public markets;
 
-    /// @dev LMSR state per market
-    mapping(uint256 => uint256) public qYes; // Total YES shares issued per market
-    mapping(uint256 => uint256) public qNo; // Total NO shares issued per market
+    mapping(uint256 => uint256) public qYes;
+    mapping(uint256 => uint256) public qNo;
 
-    /// @dev Market resolution state per market
-    mapping(uint256 => bool) public resolved; // Whether market has been resolved
-    mapping(uint256 => bool) public yesWins; // Outcome (true if YES wins, false if NO wins)
+    mapping(uint256 => bool) public resolved;
+    mapping(uint256 => bool) public yesWins;
 
-    /// @dev Participant tracking per market for autopayout system
-    mapping(uint256 => address[]) public participants; // Array of all traders per market
-    mapping(uint256 => mapping(address => Position)) public positions; // Market => Trader => Position
-    mapping(uint256 => mapping(address => bool)) public isParticipant; // Track if address is participant in market
+    mapping(uint256 => address[]) public participants;
+    mapping(uint256 => mapping(address => Position)) public positions;
+    mapping(uint256 => mapping(address => bool)) public isParticipant;
 
-    /// @dev Whale tracking per market
-    mapping(uint256 => WhaleInfo) public largestYesBet; // Current largest YES bet per market
-    mapping(uint256 => WhaleInfo) public largestNoBet; // Current largest NO bet per market
+    mapping(uint256 => WhaleInfo) public largestYesBet;
+    mapping(uint256 => WhaleInfo) public largestNoBet;
 
     // ============ Events ============
 
-    /// @dev Emitted when a new market is created
     event MarketCreated(
         uint256 indexed marketId,
         bytes32 indexed pythFeedId,
@@ -116,7 +88,6 @@ contract PredictionMarketHub {
         address indexed creator
     );
 
-    /// @dev Emitted when shares are purchased
     event SharesPurchased(
         uint256 indexed marketId,
         address indexed buyer,
@@ -126,7 +97,6 @@ contract PredictionMarketHub {
         uint256 timestamp
     );
 
-    /// @dev Emitted when a new whale bet is recorded
     event WhaleBet(
         uint256 indexed marketId,
         address indexed whale,
@@ -135,7 +105,6 @@ contract PredictionMarketHub {
         uint256 timestamp
     );
 
-    /// @dev Emitted when market is resolved
     event MarketResolved(
         uint256 indexed marketId,
         bool yesWins,
@@ -143,14 +112,12 @@ contract PredictionMarketHub {
         uint256 timestamp
     );
 
-    /// @dev Emitted when payout is distributed
     event PayoutDistributed(
         uint256 indexed marketId,
         address indexed trader,
         uint256 amount
     );
 
-    /// @dev Emitted when payout fails
     event PayoutFailed(
         uint256 indexed marketId,
         address indexed trader,
@@ -213,11 +180,7 @@ contract PredictionMarketHub {
 
     // ============ Constructor ============
 
-    /**
-     * @dev Initialize the prediction market hub
-     */
     constructor() {
-        // Initialize supported Pyth feed IDs
         _initializePythFeeds();
     }
 
@@ -239,7 +202,6 @@ contract PredictionMarketHub {
         uint256 _liquidityParam,
         string memory _description
     ) external returns (uint256 marketId) {
-        // Validate deadline is between 1 hour and 30 days in future
         if (_deadline <= block.timestamp + 1 hours) {
             revert InvalidDeadline();
         }
@@ -247,7 +209,6 @@ contract PredictionMarketHub {
             revert InvalidDeadline();
         }
 
-        // Validate liquidity parameter
         if (
             _liquidityParam < LMSRMath.MIN_LIQUIDITY_PARAM ||
             _liquidityParam > LMSRMath.MAX_LIQUIDITY_PARAM
@@ -255,17 +216,14 @@ contract PredictionMarketHub {
             revert InvalidLiquidityParam();
         }
 
-        // Validate target price (must be positive)
         if (_targetPrice == 0) {
             revert InvalidTargetPrice();
         }
 
-        // Validate feed ID is supported
         if (!isFeedSupported(_pythFeedId)) {
             revert InvalidFeedId();
         }
 
-        // Create new market
         marketId = marketCounter++;
 
         markets[marketId] = MarketConfig({
@@ -278,11 +236,9 @@ contract PredictionMarketHub {
             exists: true
         });
 
-        // Initialize LMSR state (start with 0 shares)
         qYes[marketId] = 0;
         qNo[marketId] = 0;
 
-        // Initialize resolution state
         resolved[marketId] = false;
         yesWins[marketId] = false;
 
@@ -298,11 +254,6 @@ contract PredictionMarketHub {
         return marketId;
     }
 
-    /**
-     * @dev Get market information
-     * @param marketId The market ID
-     * @return config Market configuration
-     */
     function getMarket(
         uint256 marketId
     )
@@ -314,21 +265,12 @@ contract PredictionMarketHub {
         return markets[marketId];
     }
 
-    /**
-     * @dev Get total number of markets created
-     * @return count Total market count
-     */
     function getMarketCount() external view returns (uint256 count) {
         return marketCounter;
     }
 
     // ============ View Functions ============
 
-    /**
-     * @dev Get current YES share price using LMSR formula
-     * @param marketId The market ID
-     * @return price Current YES price (scaled by 1e18, between 0 and 1)
-     */
     function getPriceYes(
         uint256 marketId
     ) external view marketExists(marketId) returns (uint256 price) {
@@ -340,11 +282,6 @@ contract PredictionMarketHub {
             );
     }
 
-    /**
-     * @dev Get current NO share price using LMSR formula
-     * @param marketId The market ID
-     * @return price Current NO price (scaled by 1e18, between 0 and 1)
-     */
     function getPriceNo(
         uint256 marketId
     ) external view marketExists(marketId) returns (uint256 price) {
@@ -356,12 +293,6 @@ contract PredictionMarketHub {
             );
     }
 
-    /**
-     * @dev Get trader's position information
-     * @param marketId The market ID
-     * @param trader Address of the trader
-     * @return position Trader's position struct
-     */
     function getPosition(
         uint256 marketId,
         address trader
@@ -369,12 +300,6 @@ contract PredictionMarketHub {
         return positions[marketId][trader];
     }
 
-    /**
-     * @dev Get current whale information for both YES and NO bets
-     * @param marketId The market ID
-     * @return largestYes Current largest YES bet info
-     * @return largestNo Current largest NO bet info
-     */
     function getCurrentWhales(
         uint256 marketId
     )
@@ -386,23 +311,12 @@ contract PredictionMarketHub {
         return (largestYesBet[marketId], largestNoBet[marketId]);
     }
 
-    /**
-     * @dev Get total number of participants in a market
-     * @param marketId The market ID
-     * @return count Number of unique traders
-     */
     function getParticipantCount(
         uint256 marketId
     ) external view marketExists(marketId) returns (uint256 count) {
         return participants[marketId].length;
     }
 
-    /**
-     * @dev Get participant address by index
-     * @param marketId The market ID
-     * @param index Index in participants array
-     * @return participant Address of participant
-     */
     function getParticipant(
         uint256 marketId,
         uint256 index
@@ -411,12 +325,6 @@ contract PredictionMarketHub {
         return participants[marketId][index];
     }
 
-    /**
-     * @dev Calculate cost for purchasing YES shares
-     * @param marketId The market ID
-     * @param shares Number of YES shares to purchase
-     * @return cost Required payment in wei
-     */
     function calculateYesCost(
         uint256 marketId,
         uint256 shares
@@ -431,12 +339,6 @@ contract PredictionMarketHub {
             );
     }
 
-    /**
-     * @dev Calculate cost for purchasing NO shares
-     * @param marketId The market ID
-     * @param shares Number of NO shares to purchase
-     * @return cost Required payment in wei
-     */
     function calculateNoCost(
         uint256 marketId,
         uint256 shares
@@ -453,11 +355,6 @@ contract PredictionMarketHub {
 
     // ============ Trading Functions ============
 
-    /**
-     * @dev Buy YES shares using LMSR cost calculation
-     * @param marketId The market ID
-     * @param shares Number of YES shares to purchase
-     */
     function buyYesShares(
         uint256 marketId,
         uint256 shares
@@ -472,7 +369,6 @@ contract PredictionMarketHub {
             revert InvalidShareAmount();
         }
 
-        // Calculate required payment using LMSR
         uint256 cost = LMSRMath.calculateYesPurchaseCost(
             qYes[marketId],
             qNo[marketId],
@@ -484,23 +380,18 @@ contract PredictionMarketHub {
             revert InsufficientPayment();
         }
 
-        // Add to participants array if first trade
         if (!isParticipant[marketId][msg.sender]) {
             participants[marketId].push(msg.sender);
             isParticipant[marketId][msg.sender] = true;
         }
 
-        // Update trader's position
         positions[marketId][msg.sender].yesShares += shares;
         positions[marketId][msg.sender].totalStaked += cost;
 
-        // Update global LMSR state
         qYes[marketId] += shares;
 
-        // Check and update whale tracking
         _updateWhaleTracking(marketId, msg.sender, cost, true);
 
-        // Emit event
         emit SharesPurchased(
             marketId,
             msg.sender,
@@ -510,18 +401,12 @@ contract PredictionMarketHub {
             block.timestamp
         );
 
-        // Refund excess payment
         if (msg.value > cost) {
             (bool success, ) = msg.sender.call{value: msg.value - cost}("");
             require(success, "Refund failed");
         }
     }
 
-    /**
-     * @dev Buy NO shares using LMSR cost calculation
-     * @param marketId The market ID
-     * @param shares Number of NO shares to purchase
-     */
     function buyNoShares(
         uint256 marketId,
         uint256 shares
@@ -536,7 +421,6 @@ contract PredictionMarketHub {
             revert InvalidShareAmount();
         }
 
-        // Calculate required payment using LMSR
         uint256 cost = LMSRMath.calculateNoPurchaseCost(
             qYes[marketId],
             qNo[marketId],
@@ -548,23 +432,18 @@ contract PredictionMarketHub {
             revert InsufficientPayment();
         }
 
-        // Add to participants array if first trade
         if (!isParticipant[marketId][msg.sender]) {
             participants[marketId].push(msg.sender);
             isParticipant[marketId][msg.sender] = true;
         }
 
-        // Update trader's position
         positions[marketId][msg.sender].noShares += shares;
         positions[marketId][msg.sender].totalStaked += cost;
 
-        // Update global LMSR state
         qNo[marketId] += shares;
 
-        // Check and update whale tracking
         _updateWhaleTracking(marketId, msg.sender, cost, false);
 
-        // Emit event
         emit SharesPurchased(
             marketId,
             msg.sender,
@@ -574,7 +453,6 @@ contract PredictionMarketHub {
             block.timestamp
         );
 
-        // Refund excess payment
         if (msg.value > cost) {
             (bool success, ) = msg.sender.call{value: msg.value - cost}("");
             require(success, "Refund failed");
@@ -583,13 +461,6 @@ contract PredictionMarketHub {
 
     // ============ Internal Functions ============
 
-    /**
-     * @dev Internal function to update whale tracking
-     * @param marketId The market ID
-     * @param trader Address of the trader
-     * @param amount Bet amount
-     * @param isYes Whether this is a YES bet
-     */
     function _updateWhaleTracking(
         uint256 marketId,
         address trader,
@@ -597,7 +468,6 @@ contract PredictionMarketHub {
         bool isYes
     ) internal {
         if (isYes) {
-            // Check if this is the new largest YES bet
             if (amount > largestYesBet[marketId].amount) {
                 largestYesBet[marketId] = WhaleInfo({
                     whale: trader,
@@ -607,7 +477,6 @@ contract PredictionMarketHub {
                 emit WhaleBet(marketId, trader, true, amount, block.timestamp);
             }
         } else {
-            // Check if this is the new largest NO bet
             if (amount > largestNoBet[marketId].amount) {
                 largestNoBet[marketId] = WhaleInfo({
                     whale: trader,
@@ -621,10 +490,6 @@ contract PredictionMarketHub {
 
     // ============ Oracle Integration Functions ============
 
-    /**
-     * @dev Initialize supported Pyth feed IDs for different assets
-     * Called during contract construction
-     */
     function _initializePythFeeds() internal {
         // BTC/USD feed ID
         pythFeeds[
@@ -700,21 +565,16 @@ contract PredictionMarketHub {
         try PYTH_ORACLE.getPriceUnsafe(feedId) returns (
             IPyth.Price memory priceData
         ) {
-            // Check if price data is too old
             if (block.timestamp - priceData.publishTime > MAX_PRICE_AGE) {
                 revert StalePriceData();
             }
 
-            // Convert price to 18 decimal format
-            // Pyth prices have negative exponents, so we need to handle the scaling
             uint256 scaledPrice;
             if (priceData.expo >= 0) {
-                // Positive exponent: multiply by 10^expo
                 scaledPrice =
                     uint256(uint64(priceData.price)) *
                     (10 ** uint256(int256(priceData.expo)));
             } else {
-                // Negative exponent: divide by 10^(-expo), then scale to 18 decimals
                 uint256 divisor = 10 ** uint256(-int256(priceData.expo));
                 scaledPrice =
                     (uint256(uint64(priceData.price)) * 1e18) /
@@ -735,7 +595,6 @@ contract PredictionMarketHub {
     function isFeedSupported(
         bytes32 feedId
     ) public view returns (bool supported) {
-        // Check if feedId matches any of the supported feeds
         return (feedId == pythFeeds["BTC"] ||
             feedId == pythFeeds["ETH"] ||
             feedId == pythFeeds["BNB"] ||
@@ -758,19 +617,14 @@ contract PredictionMarketHub {
         onlyAfterDeadline(marketId)
         onlyUnresolved(marketId)
     {
-        // Fetch current price from Pyth oracle
         (uint256 currentPrice, ) = _fetchPriceFromPyth(
             markets[marketId].pythFeedId
         );
 
-        // Determine market outcome based on price comparison
-        // YES wins if current price >= target price
         yesWins[marketId] = currentPrice >= markets[marketId].targetPrice;
 
-        // Mark market as resolved
         resolved[marketId] = true;
 
-        // Emit resolution event
         emit MarketResolved(
             marketId,
             yesWins[marketId],
@@ -778,16 +632,9 @@ contract PredictionMarketHub {
             block.timestamp
         );
 
-        // Automatically distribute payouts to all winning traders
         _distributePayouts(marketId);
     }
 
-    /**
-     * @dev Get market resolution status and outcome
-     * @param marketId The market ID
-     * @return isResolved Whether the market has been resolved
-     * @return outcome True if YES wins, false if NO wins (only valid if resolved)
-     */
     function getResolutionStatus(
         uint256 marketId
     )
@@ -809,29 +656,23 @@ contract PredictionMarketHub {
     function _distributePayouts(uint256 marketId) internal {
         uint256 participantCount = participants[marketId].length;
 
-        // Iterate through all participants
         for (uint256 i = 0; i < participantCount; i++) {
             address trader = participants[marketId][i];
             Position memory position = positions[marketId][trader];
 
             uint256 payout = 0;
 
-            // Calculate payout based on market outcome
             if (yesWins[marketId] && position.yesShares > 0) {
-                // YES wins: pay 1 BNB per YES share
                 payout = position.yesShares * 1 ether;
             } else if (!yesWins[marketId] && position.noShares > 0) {
-                // NO wins: pay 1 BNB per NO share
                 payout = position.noShares * 1 ether;
             }
 
-            // Transfer payout if trader has winning shares
             if (payout > 0) {
                 (bool success, ) = trader.call{value: payout}("");
                 if (success) {
                     emit PayoutDistributed(marketId, trader, payout);
                 } else {
-                    // Emit failure event but continue with other payouts
                     emit PayoutFailed(marketId, trader, payout);
                 }
             }
@@ -849,7 +690,7 @@ contract PredictionMarketHub {
         address trader
     ) external view marketExists(marketId) returns (uint256 payout) {
         if (!resolved[marketId]) {
-            return 0; // Market not resolved yet
+            return 0;
         }
 
         Position memory position = positions[marketId][trader];
@@ -860,7 +701,7 @@ contract PredictionMarketHub {
             return position.noShares * 1 ether;
         }
 
-        return 0; // No winning shares
+        return 0;
     }
 
     /**
@@ -872,7 +713,7 @@ contract PredictionMarketHub {
         uint256 marketId
     ) external view marketExists(marketId) returns (uint256 totalPayout) {
         if (!resolved[marketId]) {
-            return 0; // Market not resolved yet
+            return 0;
         }
 
         uint256 total = 0;
@@ -892,10 +733,6 @@ contract PredictionMarketHub {
         return total;
     }
 
-    /**
-     * @dev Get contract balance (for debugging and verification)
-     * @return balance Current contract balance in wei
-     */
     function getContractBalance() external view returns (uint256 balance) {
         return address(this).balance;
     }
@@ -925,7 +762,6 @@ contract PredictionMarketHub {
             }
         }
 
-        // Create properly sized array
         activeMarkets = new uint256[](activeCount);
         for (uint256 i = 0; i < activeCount; i++) {
             activeMarkets[i] = tempMarkets[i];
@@ -953,7 +789,6 @@ contract PredictionMarketHub {
             }
         }
 
-        // Create properly sized array
         resolvedMarkets = new uint256[](resolvedCount);
         for (uint256 i = 0; i < resolvedCount; i++) {
             resolvedMarkets[i] = tempMarkets[i];
@@ -980,7 +815,6 @@ contract PredictionMarketHub {
             }
         }
 
-        // Create properly sized array
         assetMarkets = new uint256[](assetCount);
         for (uint256 i = 0; i < assetCount; i++) {
             assetMarkets[i] = tempMarkets[i];

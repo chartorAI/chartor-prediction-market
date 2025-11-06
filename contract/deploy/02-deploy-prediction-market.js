@@ -1,0 +1,53 @@
+const { network, ethers, run } = require("hardhat");
+
+module.exports = async ({ getNamedAccounts, deployments }) => {
+  const { deploy, log } = deployments;
+  const { deployer } = await getNamedAccounts();
+
+  log("----------------------------------------------------");
+  log("🚀 Deploying PredictionMarketHub contract...");
+
+  // Deploy PredictionMarketHub (no constructor parameters needed)
+  const predictionMarket = await deploy("PredictionMarketHub", {
+    from: deployer,
+    args: [],
+    log: true,
+    waitConfirmations: network.name === "hardhat" ? 1 : 6,
+  });
+
+  log(`✅ PredictionMarketHub deployed at: ${predictionMarket.address}`);
+
+  // Verify on testnets
+  if (network.name === "bnbTestnet" && process.env.BSCSCAN_API_KEY) {
+    log("🔍 Verifying contract on BSCScan...");
+    try {
+      await run("verify:verify", {
+        address: predictionMarket.address,
+        constructorArguments: [],
+      });
+      log("✅ Contract verified!");
+    } catch (error) {
+      log(`❌ Verification failed: ${error.message}`);
+    }
+  }
+
+  // Test deployment
+  log("🧪 Testing deployment...");
+  const PredictionMarketHub = await ethers.getContractFactory(
+    "PredictionMarketHub"
+  );
+  const contract = PredictionMarketHub.attach(predictionMarket.address);
+
+  const marketCount = await contract.getMarketCount();
+  const btcFeedId = await contract.getFeedId("BTC");
+
+  log(`📊 Market count: ${marketCount}`);
+  log(`🪙 BTC Feed ID: ${btcFeedId}`);
+
+  log("----------------------------------------------------");
+  log("🎉 PredictionMarketHub deployment completed!");
+  log(`📋 Contract: ${predictionMarket.address}`);
+  log(`🌐 Network: ${network.name}`);
+};
+
+module.exports.tags = ["PredictionMarket", "all"];
