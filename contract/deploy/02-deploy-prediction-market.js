@@ -5,17 +5,17 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deployer } = await getNamedAccounts();
 
   log("----------------------------------------------------");
-  log("🚀 Deploying PredictionMarketHub contract...");
+  log("🚀 Deploying PredictionMarket contract...");
 
-  // Deploy PredictionMarketHub (no constructor parameters needed)
-  const predictionMarket = await deploy("PredictionMarketHub", {
+  // Deploy PredictionMarket (no constructor parameters needed)
+  const predictionMarket = await deploy("PredictionMarket", {
     from: deployer,
     args: [],
     log: true,
     waitConfirmations: network.name === "hardhat" ? 1 : 6,
   });
 
-  log(`✅ PredictionMarketHub deployed at: ${predictionMarket.address}`);
+  log(`✅ PredictionMarket deployed at: ${predictionMarket.address}`);
 
   // Verify on testnets
   if (network.name === "bnbTestnet" && process.env.BSCSCAN_API_KEY) {
@@ -33,10 +33,8 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   // Test deployment
   log("🧪 Testing deployment...");
-  const PredictionMarketHub = await ethers.getContractFactory(
-    "PredictionMarketHub"
-  );
-  const contract = PredictionMarketHub.attach(predictionMarket.address);
+  const PredictionMarket = await ethers.getContractFactory("PredictionMarket");
+  const contract = PredictionMarket.attach(predictionMarket.address);
 
   const marketCount = await contract.getMarketCount();
   const btcFeedId = await contract.getFeedId("BTC");
@@ -45,7 +43,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   log(`🪙 BTC Feed ID: ${btcFeedId}`);
 
   log("----------------------------------------------------");
-  log("🎉 PredictionMarketHub deployment completed!");
+  log("🎉 PredictionMarket deployment completed!");
   log(`📋 Contract: ${predictionMarket.address}`);
   log(`🌐 Network: ${network.name}`);
 };
