@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "./LMSRMath.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title IPancakeV3Pool
@@ -22,12 +23,12 @@ interface IPancakeV3Pool {
  * Extends base market functionality with liquidity-based resolution
  * Uses LMSR mechanics for automated market making
  */
-contract LiquidityMarket {
+contract LiquidityMarket is Ownable {
     using LMSRMath for uint256;
 
-    
     IPancakeV3Pool public immutable BNB_USDT_POOL;
     uint256 public constant MAX_LIQUIDITY_AGE = 300;
+    uint256 public constant PLATFORM_FEE_RATE = 150; // 1.5% = 150 basis points
 
     // ============ State Variables ============
 
@@ -68,6 +69,12 @@ contract LiquidityMarket {
 
     mapping(uint256 => WhaleInfo) public largestYesBet;
     mapping(uint256 => WhaleInfo) public largestNoBet;
+
+    mapping(uint256 => uint256) public marketBalance;
+    mapping(uint256 => uint256) public platformFees;
+    uint256 public totalPlatformFees;
+
+    mapping(uint256 => uint256) public totalWinningSharesCache;
 
     // ============ Events ============
 
@@ -114,6 +121,24 @@ contract LiquidityMarket {
         uint256 indexed marketId,
         address indexed trader,
         uint256 amount
+    );
+
+    event PlatformFeesWithdrawn(
+        address indexed owner,
+        uint256 amount,
+        uint256 timestamp
+    );
+
+    event EmergencyWithdrawal(
+        address indexed owner,
+        uint256 amount,
+        uint256 timestamp
+    );
+
+    event MarketSurplusWithdrawn(
+        address indexed owner,
+        uint256 amount,
+        uint256 timestamp
     );
 
     // ============ Errors ============
@@ -175,7 +200,7 @@ contract LiquidityMarket {
      * @dev Initialize the liquidity market contract
      * @param _poolAddress Address of the BNB/USDT PancakeSwap V3 pool on testnet
      */
-    constructor(address _poolAddress) {
+    constructor(address _poolAddress) Ownable(msg.sender) {
         if (_poolAddress == address(0)) {
             revert InvalidPoolAddress();
         }
@@ -371,6 +396,15 @@ contract LiquidityMarket {
             revert InsufficientPayment();
         }
 
+        // Calculate and deduct platform fee
+        uint256 platformFee = (cost * PLATFORM_FEE_RATE) / 10000;
+        uint256 marketFunds = cost - platformFee;
+
+        // Update fund tracking
+        marketBalance[marketId] += marketFunds;
+        platformFees[marketId] += platformFee;
+        totalPlatformFees += platformFee;
+
         if (!isParticipant[marketId][msg.sender]) {
             participants[marketId].push(msg.sender);
             isParticipant[marketId][msg.sender] = true;
@@ -427,6 +461,15 @@ contract LiquidityMarket {
         if (msg.value < cost) {
             revert InsufficientPayment();
         }
+
+        // Calculate and deduct platform fee
+        uint256 platformFee = (cost * PLATFORM_FEE_RATE) / 10000;
+        uint256 marketFunds = cost - platformFee;
+
+        // Update fund tracking
+        marketBalance[marketId] += marketFunds;
+        platformFees[marketId] += platformFee;
+        totalPlatformFees += platformFee;
 
         if (!isParticipant[marketId][msg.sender]) {
             participants[marketId].push(msg.sender);
@@ -578,29 +621,55 @@ contract LiquidityMarket {
     /**
      * @dev Internal function to distribute payouts to all winning traders
      * Called automatically during market resolution
+     * Uses proportional LMSR payouts based on market balance
      * @param marketId The market ID
      */
     function _distributePayouts(uint256 marketId) internal {
         uint256 participantCount = participants[marketId].length;
+        uint256 totalWinningShares = 0;
+        uint256 availableBalance = marketBalance[marketId];
 
+        // First pass: calculate total winning shares
         for (uint256 i = 0; i < participantCount; i++) {
             address trader = participants[marketId][i];
             Position memory position = positions[marketId][trader];
 
-            uint256 payout = 0;
-
             if (yesWins[marketId] && position.yesShares > 0) {
-                payout = position.yesShares * 1 ether;
+                totalWinningShares += position.yesShares;
             } else if (!yesWins[marketId] && position.noShares > 0) {
-                payout = position.noShares * 1 ether;
+                totalWinningShares += position.noShares;
             }
+        }
 
-            if (payout > 0) {
-                (bool success, ) = trader.call{value: payout}("");
-                if (success) {
-                    emit PayoutDistributed(marketId, trader, payout);
-                } else {
-                    emit PayoutFailed(marketId, trader, payout);
+        // Cache the total winning shares for future queries
+        totalWinningSharesCache[marketId] = totalWinningShares;
+
+        // Second pass: distribute proportional payouts
+        if (totalWinningShares > 0 && availableBalance > 0) {
+            for (uint256 i = 0; i < participantCount; i++) {
+                address trader = participants[marketId][i];
+                Position memory position = positions[marketId][trader];
+
+                uint256 winningShares = 0;
+                if (yesWins[marketId] && position.yesShares > 0) {
+                    winningShares = position.yesShares;
+                } else if (!yesWins[marketId] && position.noShares > 0) {
+                    winningShares = position.noShares;
+                }
+
+                if (winningShares > 0) {
+                    // Calculate proportional payout: (userShares / totalWinningShares) × marketBalance
+                    uint256 payout = (winningShares * availableBalance) /
+                        totalWinningShares;
+
+                    if (payout > 0) {
+                        (bool success, ) = trader.call{value: payout}("");
+                        if (success) {
+                            emit PayoutDistributed(marketId, trader, payout);
+                        } else {
+                            emit PayoutFailed(marketId, trader, payout);
+                        }
+                    }
                 }
             }
         }
@@ -621,14 +690,27 @@ contract LiquidityMarket {
         }
 
         Position memory position = positions[marketId][trader];
+        uint256 winningShares = 0;
 
         if (yesWins[marketId] && position.yesShares > 0) {
-            return position.yesShares * 1 ether;
+            winningShares = position.yesShares;
         } else if (!yesWins[marketId] && position.noShares > 0) {
-            return position.noShares * 1 ether;
+            winningShares = position.noShares;
         }
 
-        return 0;
+        if (winningShares == 0) {
+            return 0;
+        }
+
+        // Use cached value instead of recalculating
+        uint256 totalWinningShares = totalWinningSharesCache[marketId];
+
+        if (totalWinningShares == 0) {
+            return 0;
+        }
+
+        // Calculate proportional payout
+        return (winningShares * marketBalance[marketId]) / totalWinningShares;
     }
 
     /**
@@ -643,21 +725,8 @@ contract LiquidityMarket {
             return 0;
         }
 
-        uint256 total = 0;
-        uint256 participantCount = participants[marketId].length;
-
-        for (uint256 i = 0; i < participantCount; i++) {
-            address trader = participants[marketId][i];
-            Position memory position = positions[marketId][trader];
-
-            if (yesWins[marketId] && position.yesShares > 0) {
-                total += position.yesShares * 1 ether;
-            } else if (!yesWins[marketId] && position.noShares > 0) {
-                total += position.noShares * 1 ether;
-            }
-        }
-
-        return total;
+        // With proportional payouts, total payout equals the market balance
+        return marketBalance[marketId];
     }
 
     function getContractBalance() external view returns (uint256 balance) {
@@ -714,5 +783,139 @@ contract LiquidityMarket {
         }
 
         return resolvedMarkets;
+    }
+
+    // ============ Fund Management Functions ============
+
+    /**
+     * @dev Get the balance of funds for a specific market
+     * @param marketId The market ID
+     * @return balance Market-specific balance in wei
+     */
+    function getMarketBalance(
+        uint256 marketId
+    ) external view marketExists(marketId) returns (uint256 balance) {
+        return marketBalance[marketId];
+    }
+
+    /**
+     * @dev Get platform fees collected for a specific market
+     * @param marketId The market ID
+     * @return fees Platform fees collected for this market in wei
+     */
+    function getPlatformFees(
+        uint256 marketId
+    ) external view marketExists(marketId) returns (uint256 fees) {
+        return platformFees[marketId];
+    }
+
+    /**
+     * @dev Get total platform fees collected across all markets
+     * @return totalFees Total platform fees in wei
+     */
+    function getTotalPlatformFees() external view returns (uint256 totalFees) {
+        return totalPlatformFees;
+    }
+
+    // ============ Platform Fee Management ============
+
+    /**
+     * @dev Withdraw accumulated platform fees (only owner)
+     * @param amount Amount of fees to withdraw in wei
+     */
+    function withdrawPlatformFees(uint256 amount) external onlyOwner {
+        require(amount > 0, "Amount must be greater than 0");
+        require(amount <= totalPlatformFees, "Insufficient platform fees");
+        require(
+            address(this).balance >= amount,
+            "Insufficient contract balance"
+        );
+
+        totalPlatformFees -= amount;
+
+        (bool success, ) = owner().call{value: amount}("");
+        require(success, "Platform fee withdrawal failed");
+
+        emit PlatformFeesWithdrawn(owner(), amount, block.timestamp);
+    }
+
+    /**
+     * @dev Withdraw all accumulated platform fees (only owner)
+     */
+    function withdrawAllPlatformFees() external onlyOwner {
+        uint256 amount = totalPlatformFees;
+        require(amount > 0, "No platform fees to withdraw");
+        require(
+            address(this).balance >= amount,
+            "Insufficient contract balance"
+        );
+
+        totalPlatformFees = 0;
+
+        (bool success, ) = owner().call{value: amount}("");
+        require(success, "Platform fee withdrawal failed");
+
+        emit PlatformFeesWithdrawn(owner(), amount, block.timestamp);
+    }
+
+    // ============ Emergency Admin Functions ============
+
+    /**
+     * @dev Emergency withdrawal of any remaining contract balance (only owner)
+     * Should only be used in emergency situations or for contract migration
+     */
+    function emergencyWithdraw() external onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to withdraw");
+
+        (bool success, ) = owner().call{value: balance}("");
+        require(success, "Emergency withdrawal failed");
+
+        emit EmergencyWithdrawal(owner(), balance, block.timestamp);
+    }
+
+    /**
+     * @dev Withdraw specific amount from contract balance (only owner)
+     * @param amount Amount to withdraw in wei
+     */
+    function emergencyWithdrawAmount(uint256 amount) external onlyOwner {
+        require(amount > 0, "Amount must be greater than 0");
+        require(
+            address(this).balance >= amount,
+            "Insufficient contract balance"
+        );
+
+        (bool success, ) = owner().call{value: amount}("");
+        require(success, "Emergency withdrawal failed");
+
+        emit EmergencyWithdrawal(owner(), amount, block.timestamp);
+    }
+
+    /**
+     * @dev Withdraw surplus funds that exceed active market requirements (only owner)
+     * Calculates total active market balances and allows withdrawal of excess
+     */
+    function withdrawMarketSurplus() external onlyOwner {
+        uint256 totalActiveMarketFunds = 0;
+
+        // Calculate total funds needed for active markets
+        for (uint256 i = 0; i < marketCounter; i++) {
+            if (markets[i].exists && !resolved[i]) {
+                totalActiveMarketFunds += marketBalance[i];
+            }
+        }
+
+        uint256 contractBalance = address(this).balance;
+        uint256 reservedFunds = totalActiveMarketFunds + totalPlatformFees;
+
+        require(contractBalance > reservedFunds, "No surplus funds available");
+
+        uint256 surplus = contractBalance - reservedFunds;
+        require(surplus > 0, "No surplus to withdraw");
+
+        (bool success, ) = owner().call{value: surplus}("");
+        require(success, "Market surplus withdrawal failed");
+
+        emit MarketSurplusWithdrawn(owner(), surplus, block.timestamp);
     }
 }
