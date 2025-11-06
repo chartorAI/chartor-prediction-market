@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-ethers");
+require("@nomicfoundation/hardhat-chai-matchers");
 require("hardhat-deploy");
 require("hardhat-gas-reporter");
 require("hardhat-contract-sizer");
@@ -8,10 +9,13 @@ require("dotenv").config();
 
 const { networkConfig } = require("./helper-hardhat-config");
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000000";
-const BNB_TESTNET_RPC_URL = process.env.BNB_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545/";
+const PRIVATE_KEY =
+  process.env.PRIVATE_KEY ||
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
+const BNB_TESTNET_RPC_URL =
+  process.env.BNB_TESTNET_RPC_URL ||
+  "https://data-seed-prebsc-1-s1.binance.org:8545/";
 const BSCSCAN_API_KEY = process.env.BSCSCAN_API_KEY || "";
-
 
 module.exports = {
   defaultNetwork: "hardhat",
@@ -26,7 +30,7 @@ module.exports = {
     },
     bnbTestnet: {
       url: BNB_TESTNET_RPC_URL,
-      accounts: PRIVATE_KEY !== "0x0000000000000000000000000000000000000000000000000000000000000000" ? [PRIVATE_KEY] : [],
+      accounts: [PRIVATE_KEY],
       chainId: 97,
       blockConfirmations: 6,
     },
