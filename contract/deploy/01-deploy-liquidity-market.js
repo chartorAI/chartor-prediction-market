@@ -80,7 +80,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log(`✅ LiquidityMarket deployed at: ${liquidityMarket.address}`)
 
     // Verify on BSC testnet
-    if (network.name === "bnbTestnet" && process.env.BSCSCAN_API_KEY) {
+    if (network.name === "bnbTestnet" && process.env.ETHERSCAN_API_KEY) {
         log("🔍 Verifying contract on BSCScan...")
         try {
             await run("verify:verify", {

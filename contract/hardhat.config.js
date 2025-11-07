@@ -9,11 +9,10 @@ require("dotenv").config()
 
 const { networkConfig } = require("./helper-hardhat-config")
 
-const PRIVATE_KEY =
-    process.env.PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000000"
+const PRIVATE_KEY = process.env.PRIVATE_KEY
 const BNB_TESTNET_RPC_URL =
     process.env.BNB_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545/"
-const BSCSCAN_API_KEY = process.env.BSCSCAN_API_KEY || ""
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || ""
 
 module.exports = {
     defaultNetwork: "hardhat",
@@ -34,9 +33,17 @@ module.exports = {
         },
     },
     etherscan: {
-        apiKey: {
-            bscTestnet: BSCSCAN_API_KEY,
-        },
+        apiKey: ETHERSCAN_API_KEY,
+        customChains: [
+            {
+                network: "bscTestnet",
+                chainId: 97,
+                urls: {
+                    apiURL: "https://api.etherscan.io/v2/api?chainid=97",
+                    browserURL: "https://testnet.bscscan.com",
+                },
+            },
+        ],
     },
     gasReporter: {
         enabled: process.env.REPORT_GAS !== undefined,

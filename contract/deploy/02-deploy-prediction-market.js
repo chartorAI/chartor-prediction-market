@@ -18,7 +18,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log(`✅ PredictionMarket deployed at: ${predictionMarket.address}`)
 
     // Verify on testnets
-    if (network.name === "bnbTestnet" && process.env.BSCSCAN_API_KEY) {
+    if (network.name === "bnbTestnet" && process.env.ETHERSCAN_API_KEY) {
         log("🔍 Verifying contract on BSCScan...")
         try {
             await run("verify:verify", {
