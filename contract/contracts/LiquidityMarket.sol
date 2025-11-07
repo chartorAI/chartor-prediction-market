@@ -5,7 +5,6 @@ import "./LMSRMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interface/IPancakeV3Pool.sol";
 
-
 /**
  * @title LiquidityMarket
  * @dev Prediction market contract for BNB/USDT PancakeSwap liquidity predictions
@@ -100,35 +99,15 @@ contract LiquidityMarket is Ownable {
         uint256 timestamp
     );
 
-    event PayoutDistributed(
-        uint256 indexed marketId,
-        address indexed trader,
-        uint256 amount
-    );
+    event PayoutDistributed(uint256 indexed marketId, address indexed trader, uint256 amount);
 
-    event PayoutFailed(
-        uint256 indexed marketId,
-        address indexed trader,
-        uint256 amount
-    );
+    event PayoutFailed(uint256 indexed marketId, address indexed trader, uint256 amount);
 
-    event PlatformFeesWithdrawn(
-        address indexed owner,
-        uint256 amount,
-        uint256 timestamp
-    );
+    event PlatformFeesWithdrawn(address indexed owner, uint256 amount, uint256 timestamp);
 
-    event EmergencyWithdrawal(
-        address indexed owner,
-        uint256 amount,
-        uint256 timestamp
-    );
+    event EmergencyWithdrawal(address indexed owner, uint256 amount, uint256 timestamp);
 
-    event MarketSurplusWithdrawn(
-        address indexed owner,
-        uint256 amount,
-        uint256 timestamp
-    );
+    event MarketSurplusWithdrawn(address indexed owner, uint256 amount, uint256 timestamp);
 
     // ============ Errors ============
 
@@ -264,12 +243,7 @@ contract LiquidityMarket is Ownable {
 
     function getMarket(
         uint256 marketId
-    )
-        external
-        view
-        marketExists(marketId)
-        returns (LiquidityMarketConfig memory config)
-    {
+    ) external view marketExists(marketId) returns (LiquidityMarketConfig memory config) {
         return markets[marketId];
     }
 
@@ -406,14 +380,7 @@ contract LiquidityMarket is Ownable {
 
         _updateWhaleTracking(marketId, msg.sender, cost, true);
 
-        emit SharesPurchased(
-            marketId,
-            msg.sender,
-            true,
-            shares,
-            cost,
-            block.timestamp
-        );
+        emit SharesPurchased(marketId, msg.sender, true, shares, cost, block.timestamp);
 
         if (msg.value > cost) {
             (bool success, ) = msg.sender.call{value: msg.value - cost}("");
@@ -472,14 +439,7 @@ contract LiquidityMarket is Ownable {
 
         _updateWhaleTracking(marketId, msg.sender, cost, false);
 
-        emit SharesPurchased(
-            marketId,
-            msg.sender,
-            false,
-            shares,
-            cost,
-            block.timestamp
-        );
+        emit SharesPurchased(marketId, msg.sender, false, shares, cost, block.timestamp);
 
         if (msg.value > cost) {
             (bool success, ) = msg.sender.call{value: msg.value - cost}("");
@@ -550,11 +510,7 @@ contract LiquidityMarket is Ownable {
         }
     }
 
-    function getPoolTokens()
-        external
-        view
-        returns (address token0, address token1)
-    {
+    function getPoolTokens() external view returns (address token0, address token1) {
         try BNB_USDT_POOL.token0() returns (address t0) {
             try BNB_USDT_POOL.token1() returns (address t1) {
                 return (t0, t1);
@@ -570,16 +526,10 @@ contract LiquidityMarket is Ownable {
 
     function resolveMarket(
         uint256 marketId
-    )
-        external
-        marketExists(marketId)
-        onlyAfterDeadline(marketId)
-        onlyUnresolved(marketId)
-    {
+    ) external marketExists(marketId) onlyAfterDeadline(marketId) onlyUnresolved(marketId) {
         uint256 currentLiquidity = _queryPoolLiquidity();
 
-        yesWins[marketId] =
-            currentLiquidity >= markets[marketId].targetLiquidity;
+        yesWins[marketId] = currentLiquidity >= markets[marketId].targetLiquidity;
 
         resolved[marketId] = true;
 
@@ -596,12 +546,7 @@ contract LiquidityMarket is Ownable {
 
     function getResolutionStatus(
         uint256 marketId
-    )
-        external
-        view
-        marketExists(marketId)
-        returns (bool isResolved, bool outcome)
-    {
+    ) external view marketExists(marketId) returns (bool isResolved, bool outcome) {
         return (resolved[marketId], yesWins[marketId]);
     }
 
@@ -648,8 +593,7 @@ contract LiquidityMarket is Ownable {
 
                 if (winningShares > 0) {
                     // Calculate proportional payout: (userShares / totalWinningShares) × marketBalance
-                    uint256 payout = (winningShares * availableBalance) /
-                        totalWinningShares;
+                    uint256 payout = (winningShares * availableBalance) / totalWinningShares;
 
                     if (payout > 0) {
                         (bool success, ) = trader.call{value: payout}("");
@@ -724,20 +668,12 @@ contract LiquidityMarket is Ownable {
 
     // ============ Market Listing Functions ============
 
-    function getActiveMarkets()
-        external
-        view
-        returns (uint256[] memory activeMarkets)
-    {
+    function getActiveMarkets() external view returns (uint256[] memory activeMarkets) {
         uint256[] memory tempMarkets = new uint256[](marketCounter);
         uint256 activeCount = 0;
 
         for (uint256 i = 0; i < marketCounter; i++) {
-            if (
-                markets[i].exists &&
-                !resolved[i] &&
-                block.timestamp < markets[i].deadline
-            ) {
+            if (markets[i].exists && !resolved[i] && block.timestamp < markets[i].deadline) {
                 tempMarkets[activeCount] = i;
                 activeCount++;
             }
@@ -751,11 +687,7 @@ contract LiquidityMarket is Ownable {
         return activeMarkets;
     }
 
-    function getResolvedMarkets()
-        external
-        view
-        returns (uint256[] memory resolvedMarkets)
-    {
+    function getResolvedMarkets() external view returns (uint256[] memory resolvedMarkets) {
         uint256[] memory tempMarkets = new uint256[](marketCounter);
         uint256 resolvedCount = 0;
 
@@ -815,10 +747,7 @@ contract LiquidityMarket is Ownable {
     function withdrawPlatformFees(uint256 amount) external onlyOwner {
         require(amount > 0, "Amount must be greater than 0");
         require(amount <= totalPlatformFees, "Insufficient platform fees");
-        require(
-            address(this).balance >= amount,
-            "Insufficient contract balance"
-        );
+        require(address(this).balance >= amount, "Insufficient contract balance");
 
         totalPlatformFees -= amount;
 
@@ -834,10 +763,7 @@ contract LiquidityMarket is Ownable {
     function withdrawAllPlatformFees() external onlyOwner {
         uint256 amount = totalPlatformFees;
         require(amount > 0, "No platform fees to withdraw");
-        require(
-            address(this).balance >= amount,
-            "Insufficient contract balance"
-        );
+        require(address(this).balance >= amount, "Insufficient contract balance");
 
         totalPlatformFees = 0;
 
@@ -869,10 +795,7 @@ contract LiquidityMarket is Ownable {
      */
     function emergencyWithdrawAmount(uint256 amount) external onlyOwner {
         require(amount > 0, "Amount must be greater than 0");
-        require(
-            address(this).balance >= amount,
-            "Insufficient contract balance"
-        );
+        require(address(this).balance >= amount, "Insufficient contract balance");
 
         (bool success, ) = owner().call{value: amount}("");
         require(success, "Emergency withdrawal failed");

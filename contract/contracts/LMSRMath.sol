@@ -16,9 +16,9 @@ library LMSRMath {
 
     uint256 public constant MAX_SHARES = 1e21;
 
-    uint256 public constant MIN_LIQUIDITY_PARAM = 1e15; 
+    uint256 public constant MIN_LIQUIDITY_PARAM = 1e15;
 
-    uint256 public constant MAX_LIQUIDITY_PARAM = 1e21; 
+    uint256 public constant MAX_LIQUIDITY_PARAM = 1e21;
 
     error InvalidLiquidityParameter();
     error ShareQuantityTooLarge();
@@ -36,10 +36,7 @@ library LMSRMath {
         uint256 qNo,
         uint256 liquidityParam
     ) internal pure returns (uint256 cost) {
-        if (
-            liquidityParam < MIN_LIQUIDITY_PARAM ||
-            liquidityParam > MAX_LIQUIDITY_PARAM
-        ) {
+        if (liquidityParam < MIN_LIQUIDITY_PARAM || liquidityParam > MAX_LIQUIDITY_PARAM) {
             revert InvalidLiquidityParameter();
         }
 
@@ -79,10 +76,7 @@ library LMSRMath {
         uint256 qNo,
         uint256 liquidityParam
     ) internal pure returns (uint256 price) {
-        if (
-            liquidityParam < MIN_LIQUIDITY_PARAM ||
-            liquidityParam > MAX_LIQUIDITY_PARAM
-        ) {
+        if (liquidityParam < MIN_LIQUIDITY_PARAM || liquidityParam > MAX_LIQUIDITY_PARAM) {
             revert InvalidLiquidityParameter();
         }
 
@@ -120,10 +114,7 @@ library LMSRMath {
         uint256 qNo,
         uint256 liquidityParam
     ) internal pure returns (uint256 price) {
-        if (
-            liquidityParam < MIN_LIQUIDITY_PARAM ||
-            liquidityParam > MAX_LIQUIDITY_PARAM
-        ) {
+        if (liquidityParam < MIN_LIQUIDITY_PARAM || liquidityParam > MAX_LIQUIDITY_PARAM) {
             revert InvalidLiquidityParameter();
         }
 
@@ -174,11 +165,7 @@ library LMSRMath {
             revert InvalidShareQuantity();
         }
 
-        uint256 currentCost = calculateCost(
-            currentQYes,
-            currentQNo,
-            liquidityParam
-        );
+        uint256 currentCost = calculateCost(currentQYes, currentQNo, liquidityParam);
 
         uint256 newQYes = currentQYes + additionalYes;
         uint256 newQNo = currentQNo + additionalNo;
@@ -206,14 +193,7 @@ library LMSRMath {
             return 0;
         }
 
-        return
-            calculateCostDifference(
-                currentQYes,
-                currentQNo,
-                additionalYes,
-                0,
-                liquidityParam
-            );
+        return calculateCostDifference(currentQYes, currentQNo, additionalYes, 0, liquidityParam);
     }
 
     /**
@@ -235,14 +215,7 @@ library LMSRMath {
             return 0;
         }
 
-        return
-            calculateCostDifference(
-                currentQYes,
-                currentQNo,
-                0,
-                additionalNo,
-                liquidityParam
-            );
+        return calculateCostDifference(currentQYes, currentQNo, 0, additionalNo, liquidityParam);
     }
 
     /**

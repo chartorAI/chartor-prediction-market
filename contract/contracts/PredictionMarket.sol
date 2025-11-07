@@ -16,8 +16,7 @@ contract PredictionMarket is Ownable {
 
     // ============ Constants ============
 
-    IPyth public constant PYTH_ORACLE =
-        IPyth(0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb);
+    IPyth public constant PYTH_ORACLE = IPyth(0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb);
 
     uint256 public constant MAX_PRICE_AGE = 300;
     uint256 public constant PLATFORM_FEE_RATE = 150; // 1.5% = 150 basis points
@@ -106,35 +105,15 @@ contract PredictionMarket is Ownable {
         uint256 timestamp
     );
 
-    event PayoutDistributed(
-        uint256 indexed marketId,
-        address indexed trader,
-        uint256 amount
-    );
+    event PayoutDistributed(uint256 indexed marketId, address indexed trader, uint256 amount);
 
-    event PayoutFailed(
-        uint256 indexed marketId,
-        address indexed trader,
-        uint256 amount
-    );
+    event PayoutFailed(uint256 indexed marketId, address indexed trader, uint256 amount);
 
-    event PlatformFeesWithdrawn(
-        address indexed owner,
-        uint256 amount,
-        uint256 timestamp
-    );
+    event PlatformFeesWithdrawn(address indexed owner, uint256 amount, uint256 timestamp);
 
-    event EmergencyWithdrawal(
-        address indexed owner,
-        uint256 amount,
-        uint256 timestamp
-    );
+    event EmergencyWithdrawal(address indexed owner, uint256 amount, uint256 timestamp);
 
-    event MarketSurplusWithdrawn(
-        address indexed owner,
-        uint256 amount,
-        uint256 timestamp
-    );
+    event MarketSurplusWithdrawn(address indexed owner, uint256 amount, uint256 timestamp);
 
     // ============ Errors ============
 
@@ -268,12 +247,7 @@ contract PredictionMarket is Ownable {
 
     function getMarket(
         uint256 marketId
-    )
-        external
-        view
-        marketExists(marketId)
-        returns (MarketConfig memory config)
-    {
+    ) external view marketExists(marketId) returns (MarketConfig memory config) {
         return markets[marketId];
     }
 
@@ -413,14 +387,7 @@ contract PredictionMarket is Ownable {
 
         _updateWhaleTracking(marketId, msg.sender, cost, true);
 
-        emit SharesPurchased(
-            marketId,
-            msg.sender,
-            true,
-            shares,
-            cost,
-            block.timestamp
-        );
+        emit SharesPurchased(marketId, msg.sender, true, shares, cost, block.timestamp);
 
         if (msg.value > cost) {
             (bool success, ) = msg.sender.call{value: msg.value - cost}("");
@@ -474,14 +441,7 @@ contract PredictionMarket is Ownable {
 
         _updateWhaleTracking(marketId, msg.sender, cost, false);
 
-        emit SharesPurchased(
-            marketId,
-            msg.sender,
-            false,
-            shares,
-            cost,
-            block.timestamp
-        );
+        emit SharesPurchased(marketId, msg.sender, false, shares, cost, block.timestamp);
 
         if (msg.value > cost) {
             (bool success, ) = msg.sender.call{value: msg.value - cost}("");
@@ -522,29 +482,19 @@ contract PredictionMarket is Ownable {
 
     function _initializePythFeeds() internal {
         // BTC/USD
-        pythFeeds[
-            "BTC"
-        ] = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
+        pythFeeds["BTC"] = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
 
         // ETH/USD
-        pythFeeds[
-            "ETH"
-        ] = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
+        pythFeeds["ETH"] = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
 
         // BNB/USD
-        pythFeeds[
-            "BNB"
-        ] = 0x2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f;
+        pythFeeds["BNB"] = 0x2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f;
 
         // XAU/USD (Gold)
-        pythFeeds[
-            "GOLD"
-        ] = 0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2;
+        pythFeeds["GOLD"] = 0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2;
 
         // WTI Crude Oil USD feed ID
-        pythFeeds[
-            "OIL"
-        ] = 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b;
+        pythFeeds["OIL"] = 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b;
     }
 
     /**
@@ -555,12 +505,7 @@ contract PredictionMarket is Ownable {
      */
     function getCurrentPrice(
         uint256 marketId
-    )
-        external
-        view
-        marketExists(marketId)
-        returns (uint256 price, uint256 timestamp)
-    {
+    ) external view marketExists(marketId) returns (uint256 price, uint256 timestamp) {
         return _fetchPriceFromPyth(markets[marketId].pythFeedId);
     }
 
@@ -569,9 +514,7 @@ contract PredictionMarket is Ownable {
      * @param symbol Asset symbol (e.g., "BTC", "ETH", "BNB", "GOLD", "OIL")
      * @return feedId Pyth feed ID for the asset
      */
-    function getFeedId(
-        string memory symbol
-    ) external view returns (bytes32 feedId) {
+    function getFeedId(string memory symbol) external view returns (bytes32 feedId) {
         bytes32 id = pythFeeds[symbol];
         if (id == bytes32(0)) {
             revert InvalidFeedId();
@@ -592,9 +535,7 @@ contract PredictionMarket is Ownable {
             revert InvalidFeedId();
         }
 
-        try PYTH_ORACLE.getPriceUnsafe(feedId) returns (
-            IPyth.Price memory priceData
-        ) {
+        try PYTH_ORACLE.getPriceUnsafe(feedId) returns (IPyth.Price memory priceData) {
             if (block.timestamp - priceData.publishTime > MAX_PRICE_AGE) {
                 revert StalePriceData();
             }
@@ -606,9 +547,7 @@ contract PredictionMarket is Ownable {
                     (10 ** uint256(int256(priceData.expo)));
             } else {
                 uint256 divisor = 10 ** uint256(-int256(priceData.expo));
-                scaledPrice =
-                    (uint256(uint64(priceData.price)) * 1e18) /
-                    divisor;
+                scaledPrice = (uint256(uint64(priceData.price)) * 1e18) / divisor;
             }
 
             return (scaledPrice, priceData.publishTime);
@@ -622,9 +561,7 @@ contract PredictionMarket is Ownable {
      * @param feedId Pyth feed ID to check
      * @return supported True if feed ID is supported
      */
-    function isFeedSupported(
-        bytes32 feedId
-    ) public view returns (bool supported) {
+    function isFeedSupported(bytes32 feedId) public view returns (bool supported) {
         return (feedId == pythFeeds["BTC"] ||
             feedId == pythFeeds["ETH"] ||
             feedId == pythFeeds["BNB"] ||
@@ -641,38 +578,21 @@ contract PredictionMarket is Ownable {
      */
     function resolveMarket(
         uint256 marketId
-    )
-        external
-        marketExists(marketId)
-        onlyAfterDeadline(marketId)
-        onlyUnresolved(marketId)
-    {
-        (uint256 currentPrice, ) = _fetchPriceFromPyth(
-            markets[marketId].pythFeedId
-        );
+    ) external marketExists(marketId) onlyAfterDeadline(marketId) onlyUnresolved(marketId) {
+        (uint256 currentPrice, ) = _fetchPriceFromPyth(markets[marketId].pythFeedId);
 
         yesWins[marketId] = currentPrice >= markets[marketId].targetPrice;
 
         resolved[marketId] = true;
 
-        emit MarketResolved(
-            marketId,
-            yesWins[marketId],
-            currentPrice,
-            block.timestamp
-        );
+        emit MarketResolved(marketId, yesWins[marketId], currentPrice, block.timestamp);
 
         _distributePayouts(marketId);
     }
 
     function getResolutionStatus(
         uint256 marketId
-    )
-        external
-        view
-        marketExists(marketId)
-        returns (bool isResolved, bool outcome)
-    {
+    ) external view marketExists(marketId) returns (bool isResolved, bool outcome) {
         return (resolved[marketId], yesWins[marketId]);
     }
 
@@ -719,8 +639,7 @@ contract PredictionMarket is Ownable {
 
                 if (winningShares > 0) {
                     // Calculate proportional payout: (userShares / totalWinningShares) × marketBalance
-                    uint256 payout = (winningShares * availableBalance) /
-                        totalWinningShares;
+                    uint256 payout = (winningShares * availableBalance) / totalWinningShares;
 
                     if (payout > 0) {
                         (bool success, ) = trader.call{value: payout}("");
@@ -829,20 +748,12 @@ contract PredictionMarket is Ownable {
      * @dev Get all active markets (not resolved and not expired)
      * @return activeMarkets Array of active market IDs
      */
-    function getActiveMarkets()
-        external
-        view
-        returns (uint256[] memory activeMarkets)
-    {
+    function getActiveMarkets() external view returns (uint256[] memory activeMarkets) {
         uint256[] memory tempMarkets = new uint256[](marketCounter);
         uint256 activeCount = 0;
 
         for (uint256 i = 0; i < marketCounter; i++) {
-            if (
-                markets[i].exists &&
-                !resolved[i] &&
-                block.timestamp < markets[i].deadline
-            ) {
+            if (markets[i].exists && !resolved[i] && block.timestamp < markets[i].deadline) {
                 tempMarkets[activeCount] = i;
                 activeCount++;
             }
@@ -860,11 +771,7 @@ contract PredictionMarket is Ownable {
      * @dev Get all resolved markets
      * @return resolvedMarkets Array of resolved market IDs
      */
-    function getResolvedMarkets()
-        external
-        view
-        returns (uint256[] memory resolvedMarkets)
-    {
+    function getResolvedMarkets() external view returns (uint256[] memory resolvedMarkets) {
         uint256[] memory tempMarkets = new uint256[](marketCounter);
         uint256 resolvedCount = 0;
 
@@ -918,10 +825,7 @@ contract PredictionMarket is Ownable {
     function withdrawPlatformFees(uint256 amount) external onlyOwner {
         require(amount > 0, "Amount must be greater than 0");
         require(amount <= totalPlatformFees, "Insufficient platform fees");
-        require(
-            address(this).balance >= amount,
-            "Insufficient contract balance"
-        );
+        require(address(this).balance >= amount, "Insufficient contract balance");
 
         totalPlatformFees -= amount;
 
@@ -937,10 +841,7 @@ contract PredictionMarket is Ownable {
     function withdrawAllPlatformFees() external onlyOwner {
         uint256 amount = totalPlatformFees;
         require(amount > 0, "No platform fees to withdraw");
-        require(
-            address(this).balance >= amount,
-            "Insufficient contract balance"
-        );
+        require(address(this).balance >= amount, "Insufficient contract balance");
 
         totalPlatformFees = 0;
 
@@ -972,10 +873,7 @@ contract PredictionMarket is Ownable {
      */
     function emergencyWithdrawAmount(uint256 amount) external onlyOwner {
         require(amount > 0, "Amount must be greater than 0");
-        require(
-            address(this).balance >= amount,
-            "Insufficient contract balance"
-        );
+        require(address(this).balance >= amount, "Insufficient contract balance");
 
         (bool success, ) = owner().call{value: amount}("");
         require(success, "Emergency withdrawal failed");

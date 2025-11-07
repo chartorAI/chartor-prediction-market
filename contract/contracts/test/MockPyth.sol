@@ -33,12 +33,7 @@ contract MockPyth {
      * @param conf Confidence interval
      * @param expo Price exponent (usually negative)
      */
-    function setMockPrice(
-        bytes32 feedId,
-        int64 price,
-        uint64 conf,
-        int32 expo
-    ) external {
+    function setMockPrice(bytes32 feedId, int64 price, uint64 conf, int32 expo) external {
         mockPrices[feedId] = Price({
             price: price,
             conf: conf,
@@ -66,9 +61,7 @@ contract MockPyth {
      * @param id Pyth feed ID for the asset
      * @return price Price struct containing price data
      */
-    function getPriceUnsafe(
-        bytes32 id
-    ) external view returns (Price memory price) {
+    function getPriceUnsafe(bytes32 id) external view returns (Price memory price) {
         Price memory storedPrice = mockPrices[id];
 
         // If no mock price set, return default
@@ -105,10 +98,7 @@ contract MockPyth {
         }
 
         // Check if price is stale (older than 5 minutes)
-        require(
-            block.timestamp - storedPrice.publishTime <= 300,
-            "Price data is stale"
-        );
+        require(block.timestamp - storedPrice.publishTime <= 300, "Price data is stale");
 
         return storedPrice;
     }

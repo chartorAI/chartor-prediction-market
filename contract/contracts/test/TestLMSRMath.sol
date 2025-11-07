@@ -73,18 +73,10 @@ contract TestLMSRMath {
         uint256 liquidityParam
     ) external pure returns (uint256) {
         return
-            LMSRMath.calculateNoPurchaseCost(
-                currentQYes,
-                currentQNo,
-                additionalNo,
-                liquidityParam
-            );
+            LMSRMath.calculateNoPurchaseCost(currentQYes, currentQNo, additionalNo, liquidityParam);
     }
 
-    function validatePriceSum(
-        uint256 yesPrice,
-        uint256 noPrice
-    ) external pure returns (bool) {
+    function validatePriceSum(uint256 yesPrice, uint256 noPrice) external pure returns (bool) {
         return LMSRMath.validatePriceSum(yesPrice, noPrice);
     }
 }
