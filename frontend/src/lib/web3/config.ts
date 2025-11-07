@@ -1,5 +1,4 @@
 import { CHAIN_NAMESPACES, WEB3AUTH_NETWORK } from "@web3auth/base"
-import { Web3Auth } from "@web3auth/modal"
 import { bscTestnet } from "viem/chains"
 
 export const web3AuthConfig = {
@@ -23,7 +22,6 @@ export const web3AuthConfig = {
     },
     mode: "dark" as const,
     loginMethodsOrder: ["google", "twitter", "github"],
-    defaultLanguage: "en",
   },
 }
 
