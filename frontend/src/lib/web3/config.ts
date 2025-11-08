@@ -3,7 +3,7 @@ import { bscTestnet } from "viem/chains"
 
 export const web3AuthConfig = {
   clientId: process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID || "",
-  web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+  web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
   chainConfig: {
     chainNamespace: CHAIN_NAMESPACES.EIP155,
     chainId: "0x61", // BNB Testnet (97 in hex)

@@ -1,6 +1,7 @@
 import {
   BiconomySmartAccountV2,
   DEFAULT_ENTRYPOINT_ADDRESS,
+  createBundler,
 } from "@biconomy/account"
 import {
   createWalletClient,
@@ -24,12 +25,17 @@ export const createSmartAccount = async (
   // Get the EOA address
   const [eoaAddress] = await walletClient.getAddresses()
 
+  // Create Bundler instance
+  const bundler = await createBundler({
+    bundlerUrl: biconomyConfig.bundlerUrl,
+    chainId: biconomyConfig.chainId,
+    entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
+  })
+
   // Create Biconomy Smart Account
   const smartAccount = await BiconomySmartAccountV2.create({
     chainId: biconomyConfig.chainId,
-    bundler: {
-      bundlerUrl: biconomyConfig.bundlerUrl,
-    },
+    bundler: bundler,
     entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
     signer: walletClient,
   })
