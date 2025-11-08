@@ -28,12 +28,16 @@ export function Navbar({ className }: NavbarProps) {
   const { balance, isLoading: balanceLoading } = useBalance()
   const { createMarket, isCreating } = useCreateMarket()
 
-  const marketTabs = [
+  const navItems = [
+    { label: "Home", href: "/" },
     { label: "Price Markets", href: "/markets/price" },
     { label: "Liquidity Markets", href: "/markets/liquidity" },
   ]
 
-  const isActiveTab = (href: string) => pathname?.startsWith(href)
+  const isActiveTab = (href: string) => {
+    if (href === "/") return pathname === "/"
+    return pathname?.startsWith(href)
+  }
 
   const handleLogin = async () => {
     try {
@@ -74,7 +78,7 @@ export function Navbar({ className }: NavbarProps) {
   return (
     <nav
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 glass-medium border-b border-border-subtle",
+        "fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-white/10",
         className
       )}
     >
@@ -85,45 +89,46 @@ export function Navbar({ className }: NavbarProps) {
             href="/"
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
-            <span className="text-xl font-bold text-white">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent-blue flex items-center justify-center">
+              <span className="text-white font-bold text-sm">PM</span>
+            </div>
+            <span className="text-xl font-bold text-white hidden sm:block">
               Prediction Market
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            {/* Market Type Tabs */}
-            <div className="flex items-center space-x-2 glass px-2 py-1 rounded-lg">
-              {marketTabs.map((tab) => (
+          <div className="hidden md:flex items-center gap-6">
+            {/* Navigation Links */}
+            <nav className="flex items-center gap-6">
+              {navItems.map((item) => (
                 <Link
-                  key={tab.href}
-                  href={tab.href}
+                  key={item.href}
+                  href={item.href}
                   className={cn(
-                    "px-4 py-2 rounded-md text-sm font-medium transition-all",
-                    isActiveTab(tab.href)
-                      ? "bg-primary text-white shadow-glow"
-                      : "text-text-secondary hover:text-text-primary hover:bg-glass-medium"
+                    "text-sm font-medium transition-colors",
+                    isActiveTab(item.href)
+                      ? "text-white"
+                      : "text-white/60 hover:text-white"
                   )}
                 >
-                  {tab.label}
+                  {item.label}
                 </Link>
               ))}
-            </div>
-
-            {/* My Positions Link */}
-            {isAuthenticated && (
-              <Link
-                href="/positions"
-                className={cn(
-                  "px-4 py-2 rounded-md text-sm font-medium transition-all",
-                  pathname === "/positions"
-                    ? "text-primary"
-                    : "text-text-secondary hover:text-text-primary"
-                )}
-              >
-                My Positions
-              </Link>
-            )}
+              {isAuthenticated && (
+                <Link
+                  href="/positions"
+                  className={cn(
+                    "text-sm font-medium transition-colors",
+                    pathname === "/positions"
+                      ? "text-white"
+                      : "text-white/60 hover:text-white"
+                  )}
+                >
+                  My Positions
+                </Link>
+              )}
+            </nav>
 
             {/* Create Market Button */}
             {isAuthenticated && (
@@ -131,20 +136,20 @@ export function Navbar({ className }: NavbarProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => setCreateMarketModalOpen(true)}
-                className="glass-button border-primary/50 hover:border-primary"
+                className="border-primary/50 hover:border-primary hover:bg-primary/10"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Market
               </Button>
             )}
 
-            {/* Auth Button */}
+            {/* Auth Section */}
             {isAuthenticated ? (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 {/* Balance Display */}
-                <div className="glass px-4 py-2 rounded-lg flex items-center gap-2">
+                <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-full flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-mono text-text-primary">
+                  <span className="text-sm font-mono text-white">
                     {balanceLoading || balance === null
                       ? "..."
                       : `${formatBigInt(balance, 18, 4)} BNB`}
@@ -153,16 +158,16 @@ export function Navbar({ className }: NavbarProps) {
                 {/* Address Display */}
                 <button
                   onClick={handleCopyAddress}
-                  className="glass px-4 py-2 rounded-lg hover:bg-glass-medium transition-all flex items-center gap-2 group"
+                  className="bg-white/5 border border-white/10 px-4 py-2 rounded-full hover:bg-white/10 transition-all flex items-center gap-2 group"
                   title="Click to copy address"
                 >
-                  <span className="text-sm font-mono text-text-primary">
+                  <span className="text-sm font-mono text-white">
                     {truncateAddress(userAddress || "")}
                   </span>
                   {copied ? (
                     <Check className="w-3 h-3 text-success" />
                   ) : (
-                    <Copy className="w-3 h-3 text-text-secondary group-hover:text-primary transition-colors" />
+                    <Copy className="w-3 h-3 text-white/60 group-hover:text-primary transition-colors" />
                   )}
                 </button>
                 <Button
@@ -170,7 +175,7 @@ export function Navbar({ className }: NavbarProps) {
                   size="sm"
                   onClick={handleLogout}
                   disabled={isLoading}
-                  className="glass-button"
+                  className="border-white/20 hover:bg-white/10"
                 >
                   Logout
                 </Button>
@@ -179,9 +184,9 @@ export function Navbar({ className }: NavbarProps) {
               <Button
                 onClick={handleLogin}
                 disabled={isLoading}
-                className="bg-primary hover:bg-primary-light transition-colors"
+                className="bg-primary hover:bg-primary/80 text-white px-6 py-2 rounded-full font-medium transition-colors"
               >
-                {isLoading ? "Connecting..." : "Sign In"}
+                {isLoading ? "Connecting..." : "Connect Wallet"}
               </Button>
             )}
           </div>
@@ -203,53 +208,46 @@ export function Navbar({ className }: NavbarProps) {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden glass-medium border-t border-border-subtle animate-slide-down">
+        <div className="md:hidden bg-black/95 backdrop-blur-sm border-t border-white/10 animate-slide-down">
           <div className="px-4 py-4 space-y-4">
-            {/* Market Type Tabs */}
-            <div className="space-y-2">
-              <p className="text-xs text-text-secondary uppercase tracking-wider px-2">
-                Markets
-              </p>
-              {marketTabs.map((tab) => (
+            {/* Navigation Links */}
+            <nav className="space-y-2">
+              {navItems.map((item) => (
                 <Link
-                  key={tab.href}
-                  href={tab.href}
+                  key={item.href}
+                  href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     "block px-4 py-3 rounded-lg text-sm font-medium transition-all",
-                    isActiveTab(tab.href)
-                      ? "bg-primary text-white shadow-glow"
-                      : "text-text-secondary hover:text-text-primary hover:bg-glass-medium"
+                    isActiveTab(item.href)
+                      ? "bg-primary text-white"
+                      : "text-white/60 hover:text-white hover:bg-white/5"
                   )}
                 >
-                  {tab.label}
+                  {item.label}
                 </Link>
               ))}
-            </div>
-
-            {/* My Positions Link */}
-            {isAuthenticated && (
-              <div className="space-y-2">
+              {isAuthenticated && (
                 <Link
                   href="/positions"
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     "block px-4 py-3 rounded-lg text-sm font-medium transition-all",
                     pathname === "/positions"
-                      ? "bg-primary text-white shadow-glow"
-                      : "text-text-secondary hover:text-text-primary hover:bg-glass-medium"
+                      ? "bg-primary text-white"
+                      : "text-white/60 hover:text-white hover:bg-white/5"
                   )}
                 >
                   My Positions
                 </Link>
-              </div>
-            )}
+              )}
+            </nav>
 
             {/* Create Market Button */}
             {isAuthenticated && (
               <Button
                 variant="outline"
-                className="w-full glass-button border-primary/50 hover:border-primary"
+                className="w-full border-primary/50 hover:border-primary hover:bg-primary/10"
                 onClick={() => {
                   setMobileMenuOpen(false)
                   setCreateMarketModalOpen(true)
@@ -261,16 +259,16 @@ export function Navbar({ className }: NavbarProps) {
             )}
 
             {/* Auth Section */}
-            <div className="pt-4 border-t border-border-subtle space-y-3">
+            <div className="pt-4 border-t border-white/10 space-y-3">
               {isAuthenticated ? (
                 <>
                   {/* Balance Display */}
-                  <div className="glass px-4 py-3 rounded-lg">
-                    <p className="text-xs text-text-secondary mb-1 flex items-center gap-1">
+                  <div className="bg-white/5 border border-white/10 px-4 py-3 rounded-lg">
+                    <p className="text-xs text-white/60 mb-1 flex items-center gap-1">
                       <Wallet className="w-3 h-3" />
                       Balance
                     </p>
-                    <p className="text-sm font-mono text-text-primary">
+                    <p className="text-sm font-mono text-white">
                       {balanceLoading || balance === null
                         ? "Loading..."
                         : `${formatBigInt(balance, 18, 4)} BNB`}
@@ -279,23 +277,23 @@ export function Navbar({ className }: NavbarProps) {
                   {/* Wallet Address */}
                   <button
                     onClick={handleCopyAddress}
-                    className="glass px-4 py-3 rounded-lg w-full text-left hover:bg-glass-medium transition-all"
+                    className="bg-white/5 border border-white/10 px-4 py-3 rounded-lg w-full text-left hover:bg-white/10 transition-all"
                   >
-                    <p className="text-xs text-text-secondary mb-1 flex items-center justify-between">
+                    <p className="text-xs text-white/60 mb-1 flex items-center justify-between">
                       <span>Wallet Address</span>
                       {copied ? (
                         <Check className="w-3 h-3 text-success" />
                       ) : (
-                        <Copy className="w-3 h-3 text-text-secondary" />
+                        <Copy className="w-3 h-3 text-white/60" />
                       )}
                     </p>
-                    <p className="text-sm font-mono text-text-primary">
+                    <p className="text-sm font-mono text-white">
                       {truncateAddress(userAddress || "")}
                     </p>
                   </button>
                   <Button
                     variant="outline"
-                    className="w-full glass-button"
+                    className="w-full border-white/20 hover:bg-white/10"
                     onClick={handleLogout}
                     disabled={isLoading}
                   >
@@ -306,9 +304,9 @@ export function Navbar({ className }: NavbarProps) {
                 <Button
                   onClick={handleLogin}
                   disabled={isLoading}
-                  className="w-full bg-primary hover:bg-primary-light transition-colors"
+                  className="w-full bg-primary hover:bg-primary/80 text-white px-6 py-2 rounded-full font-medium transition-colors"
                 >
-                  {isLoading ? "Connecting..." : "Sign In"}
+                  {isLoading ? "Connecting..." : "Connect Wallet"}
                 </Button>
               )}
             </div>
