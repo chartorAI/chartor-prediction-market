@@ -44,14 +44,34 @@ export function useMarkets() {
       },
     })
 
-  // Fetch market details for price markets
+  // Fetch market details for price markets (config, qYes, qNo, resolved)
   const priceMarketContracts =
-    priceMarketIds?.map((id) => ({
-      address: addresses.predictionMarket,
-      abi: PREDICTION_MARKET_ABI,
-      functionName: "getMarket" as const,
-      args: [id],
-    })) || []
+    priceMarketIds?.flatMap((id) => [
+      {
+        address: addresses.predictionMarket,
+        abi: PREDICTION_MARKET_ABI,
+        functionName: "getMarket" as const,
+        args: [id],
+      },
+      {
+        address: addresses.predictionMarket,
+        abi: PREDICTION_MARKET_ABI,
+        functionName: "qYes" as const,
+        args: [id],
+      },
+      {
+        address: addresses.predictionMarket,
+        abi: PREDICTION_MARKET_ABI,
+        functionName: "qNo" as const,
+        args: [id],
+      },
+      {
+        address: addresses.predictionMarket,
+        abi: PREDICTION_MARKET_ABI,
+        functionName: "resolved" as const,
+        args: [id],
+      },
+    ]) || []
 
   const { data: priceMarketData, isLoading: loadingPriceData } =
     useReadContracts({
@@ -62,14 +82,34 @@ export function useMarkets() {
       },
     })
 
-  // Fetch market details for liquidity markets
+  // Fetch market details for liquidity markets (config, qYes, qNo, resolved)
   const liquidityMarketContracts =
-    liquidityMarketIds?.map((id) => ({
-      address: addresses.liquidityMarket,
-      abi: LIQUIDITY_MARKET_ABI,
-      functionName: "getMarket" as const,
-      args: [id],
-    })) || []
+    liquidityMarketIds?.flatMap((id) => [
+      {
+        address: addresses.liquidityMarket,
+        abi: LIQUIDITY_MARKET_ABI,
+        functionName: "getMarket" as const,
+        args: [id],
+      },
+      {
+        address: addresses.liquidityMarket,
+        abi: LIQUIDITY_MARKET_ABI,
+        functionName: "qYes" as const,
+        args: [id],
+      },
+      {
+        address: addresses.liquidityMarket,
+        abi: LIQUIDITY_MARKET_ABI,
+        functionName: "qNo" as const,
+        args: [id],
+      },
+      {
+        address: addresses.liquidityMarket,
+        abi: LIQUIDITY_MARKET_ABI,
+        functionName: "resolved" as const,
+        args: [id],
+      },
+    ]) || []
 
   const { data: liquidityMarketData, isLoading: loadingLiquidityData } =
     useReadContracts({
@@ -94,12 +134,23 @@ export function useMarkets() {
     try {
       const allMarkets: Market[] = []
 
-      // Process price markets
+      // Process price markets (each market has 4 contract calls: config, qYes, qNo, resolved)
       if (priceMarketIds && priceMarketData) {
         priceMarketIds.forEach((id, index) => {
-          const result = priceMarketData[index]
-          if (result?.status === "success" && result.result) {
-            const config = result.result
+          const baseIndex = index * 4
+          const configResult = priceMarketData[baseIndex]
+          const qYesResult = priceMarketData[baseIndex + 1]
+          const qNoResult = priceMarketData[baseIndex + 2]
+          const resolvedResult = priceMarketData[baseIndex + 3]
+
+          if (
+            configResult?.status === "success" &&
+            configResult.result &&
+            qYesResult?.status === "success" &&
+            qNoResult?.status === "success" &&
+            resolvedResult?.status === "success"
+          ) {
+            const config = configResult.result
             const asset = getAssetFromFeedId(config.pythFeedId)
 
             if (asset && config.exists) {
@@ -113,9 +164,9 @@ export function useMarkets() {
                 liquidityParam: config.liquidityParam,
                 description: config.description,
                 creator: config.creator,
-                qYes: BigInt(0), // Will be fetched separately
-                qNo: BigInt(0), // Will be fetched separately
-                resolved: false, // Will be fetched separately
+                qYes: qYesResult.result as bigint,
+                qNo: qNoResult.result as bigint,
+                resolved: resolvedResult.result as boolean,
                 yesWins: false,
               }
               allMarkets.push(market)
@@ -124,26 +175,37 @@ export function useMarkets() {
         })
       }
 
-      // Process liquidity markets
+      // Process liquidity markets (each market has 4 contract calls: config, qYes, qNo, resolved)
       if (liquidityMarketIds && liquidityMarketData) {
         liquidityMarketIds.forEach((id, index) => {
-          const result = liquidityMarketData[index]
-          if (result?.status === "success" && result.result) {
-            const config = result.result
+          const baseIndex = index * 4
+          const configResult = liquidityMarketData[baseIndex]
+          const qYesResult = liquidityMarketData[baseIndex + 1]
+          const qNoResult = liquidityMarketData[baseIndex + 2]
+          const resolvedResult = liquidityMarketData[baseIndex + 3]
+
+          if (
+            configResult?.status === "success" &&
+            configResult.result &&
+            qYesResult?.status === "success" &&
+            qNoResult?.status === "success" &&
+            resolvedResult?.status === "success"
+          ) {
+            const config = configResult.result
 
             if (config.exists) {
               const market: LiquidityMarket = {
                 id: id.toString(),
                 type: "LIQUIDITY",
-                poolAddress: addresses.liquidityMarket, // Pool address from contract
+                poolAddress: addresses.liquidityMarket,
                 targetLiquidity: config.targetLiquidity,
                 deadline: Number(config.deadline),
                 liquidityParam: config.liquidityParam,
                 description: config.description,
                 creator: config.creator,
-                qYes: BigInt(0), // Will be fetched separately
-                qNo: BigInt(0), // Will be fetched separately
-                resolved: false, // Will be fetched separately
+                qYes: qYesResult.result as bigint,
+                qNo: qNoResult.result as bigint,
+                resolved: resolvedResult.result as boolean,
                 yesWins: false,
               }
               allMarkets.push(market)

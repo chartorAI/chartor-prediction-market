@@ -68,10 +68,14 @@ export function useContractRead<T = any>({
       const interval = setInterval(fetchData, watchInterval)
       return () => clearInterval(interval)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     address,
     functionName,
-    JSON.stringify(args),
+    // Convert args to string safely, handling BigInt
+    args
+      ?.map((arg) => (typeof arg === "bigint" ? arg.toString() : arg))
+      .join(","),
     enabled,
     watch,
     watchInterval,

@@ -13,6 +13,10 @@ import {
 } from "lucide-react"
 import { useMarkets } from "@/lib/hooks/useMarkets"
 import { LoadingSpinner } from "@/components/common/LoadingSpinner"
+import {
+  calculateMarketPrices,
+  calculateMarketVolume,
+} from "@/lib/utils/marketPrices"
 
 export default function Home() {
   const { allMarkets, isLoading } = useMarkets()
@@ -311,50 +315,80 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentMarkets.map((market, index) => (
-                <motion.div
-                  key={market.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link
-                    href={
-                      market.type === "PRICE"
-                        ? `/markets/price/${market.asset.toLowerCase()}`
-                        : "/markets/liquidity"
-                    }
+              {recentMarkets.map((market, index) => {
+                // Calculate YES/NO prices using LMSR formula
+                const { yesPricePercent, noPricePercent } =
+                  calculateMarketPrices(market)
+                const totalVolume = calculateMarketVolume(market)
+
+                return (
+                  <motion.div
+                    key={market.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
                   >
-                    <div className="bg-white/5 border border-white/10 backdrop-blur-xl p-6 rounded-2xl hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer h-full group">
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-xs font-semibold text-primary uppercase px-3 py-1 bg-primary/10 rounded-full">
-                          {market.type === "PRICE" ? market.asset : "BNB/USDT"}
-                        </span>
-                        <span className="text-xs text-white/40">
-                          {new Date(
-                            market.deadline * 1000
-                          ).toLocaleDateString()}
-                        </span>
+                    <Link
+                      href={
+                        market.type === "PRICE"
+                          ? `/markets/price/${market.asset.toLowerCase()}`
+                          : "/markets/liquidity"
+                      }
+                    >
+                      <div className="bg-white/5 border border-white/10 backdrop-blur-xl p-6 rounded-2xl hover:bg-white/10 hover:border-primary/50 transition-all h-full cursor-pointer group">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-semibold text-primary uppercase px-3 py-1 bg-primary/10 rounded-full">
+                            {market.type === "PRICE"
+                              ? market.asset
+                              : "BNB/USDT"}
+                          </span>
+                          <span className="text-xs text-white/40">
+                            {new Date(
+                              market.deadline * 1000
+                            ).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-white text-sm mb-6 line-clamp-2 min-h-10">
+                          {market.description}
+                        </p>
+
+                        {/* YES/NO Prices from LMSR */}
+                        <div className="flex items-center gap-4 mb-4 pb-4 border-b border-white/10">
+                          <div className="flex-1">
+                            <div className="text-xs text-white/60 mb-1">
+                              YES
+                            </div>
+                            <div className="text-lg font-bold text-success">
+                              {yesPricePercent.toFixed(1)}%
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-xs text-white/60 mb-1">NO</div>
+                            <div className="text-lg font-bold text-error">
+                              {noPricePercent.toFixed(1)}%
+                            </div>
+                          </div>
+                          <div className="flex-1 text-right">
+                            <div className="text-xs text-white/60 mb-1">
+                              Volume
+                            </div>
+                            <div className="text-sm font-semibold text-white">
+                              {totalVolume.toFixed(2)} BNB
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* View Market Button */}
+                        <div className="flex items-center justify-center gap-2 text-primary font-semibold group-hover:gap-3 transition-all">
+                          <span>View Market</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
                       </div>
-                      <p className="text-white text-sm mb-4 line-clamp-2 min-h-[2.5rem]">
-                        {market.description}
-                      </p>
-                      <div className="flex items-center justify-between text-xs pt-4 border-t border-white/10">
-                        <span className="text-white/60">
-                          Volume:{" "}
-                          {(Number(market.qYes + market.qNo) / 1e18).toFixed(2)}{" "}
-                          BNB
-                        </span>
-                        <span className="text-primary font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
-                          View
-                          <ArrowRight className="w-3 h-3" />
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+                    </Link>
+                  </motion.div>
+                )
+              })}
             </div>
           )}
 
