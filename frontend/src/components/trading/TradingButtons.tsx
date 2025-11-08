@@ -31,7 +31,7 @@ export function TradingButtons({
 
   // Calculate prices
   const { yesPricePercent, noPricePercent } = calculateMarketPrices(market)
-  
+
   // Calculate price in BNB (assuming 1 share costs the probability in BNB)
   const yesPriceBNB = yesPricePercent / 100
   const noPriceBNB = noPricePercent / 100
@@ -101,8 +101,7 @@ export function TradingButtons({
         <button
           onClick={() => handleButtonClick(true)}
           disabled={isDisabled}
-          className="flex-1 px-4 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white"
-          style={{ backgroundColor: '#3F1A8F' }}
+          className="flex-1 px-4 py-3 bg-[#3F1A8F] hover:bg-[#4F2A9F] rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white"
         >
           {renderButtonContent("Yes", yesPriceBNB, yesPricePercent, true)}
         </button>

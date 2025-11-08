@@ -207,34 +207,37 @@ export function TradingModal({
             transition={{ duration: 0.2 }}
           >
             <DialogHeader>
-              <DialogTitle className="text-xl">
+              <DialogTitle className="text-2xl font-bold">
                 Buy {isYes ? "YES" : "NO"} Shares
               </DialogTitle>
-              <DialogDescription className="text-text-secondary">
+              <DialogDescription className="text-white/60 text-sm mt-2">
                 {market.description}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6 py-6">
+            <div className="space-y-5 py-4">
               {/* Market Details */}
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <div className="text-text-secondary">YES</div>
-                    <div className="text-success font-semibold">
-                      {yesPricePercent.toFixed(1)}%
+              <div className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-6">
+                    <div className="text-center">
+                      <div className="text-white/50 text-xs mb-1">YES</div>
+                      <div className="text-success font-bold text-lg">
+                        {yesPricePercent.toFixed(1)}%
+                      </div>
+                    </div>
+                    <div className="w-px h-10 bg-white/10"></div>
+                    <div className="text-center">
+                      <div className="text-white/50 text-xs mb-1">NO</div>
+                      <div className="text-error font-bold text-lg">
+                        {noPricePercent.toFixed(1)}%
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div className="text-text-secondary">NO</div>
-                    <div className="text-error font-semibold">
-                      {noPricePercent.toFixed(1)}%
+                  <div className="text-right">
+                    <div className="text-white/40 text-xs">
+                      Market #{market.id}
                     </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-text-secondary text-xs">
-                    Market #{market.id}
                   </div>
                 </div>
               </div>
@@ -243,14 +246,14 @@ export function TradingModal({
               <div className="space-y-2">
                 <label
                   htmlFor="shareAmount"
-                  className="text-sm font-medium text-text-primary"
+                  className="text-sm font-semibold text-white"
                 >
-                  Number of Shares (whole numbers only)
+                  Number of Shares
                 </label>
                 <Input
                   id="shareAmount"
                   type="number"
-                  placeholder="Enter share amount (e.g., 1, 2, 3...)"
+                  placeholder="Enter amount (e.g., 1, 2, 3...)"
                   value={shareAmount}
                   onChange={(e) => {
                     // Only allow integers
@@ -260,7 +263,7 @@ export function TradingModal({
                     }
                   }}
                   disabled={isExecuting}
-                  className="text-lg h-12"
+                  className="text-lg h-12 bg-white/5 border-white/10 focus:border-primary/50 text-white"
                   min="1"
                   step="1"
                   pattern="[0-9]*"
@@ -269,13 +272,13 @@ export function TradingModal({
                   <motion.p
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-error text-sm"
+                    className="text-error text-sm font-medium"
                   >
                     {error}
                   </motion.p>
                 )}
-                <p className="text-xs text-text-secondary">
-                  You can only purchase whole shares (1, 2, 3, etc.)
+                <p className="text-xs text-white/50">
+                  Whole numbers only (1, 2, 3, etc.)
                 </p>
               </div>
 
@@ -285,11 +288,11 @@ export function TradingModal({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="space-y-3 p-4 rounded-lg bg-glass-light border border-border-subtle"
+                  className="space-y-3 p-4 rounded-xl bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10"
                 >
                   <div className="flex justify-between text-sm">
-                    <span className="text-text-secondary">Share Cost</span>
-                    <span className="text-text-primary font-medium">
+                    <span className="text-white/60">Share Cost</span>
+                    <span className="text-white font-semibold">
                       {isLoadingCost ? (
                         <LoadingSpinner size="sm" />
                       ) : costData ? (
@@ -300,17 +303,15 @@ export function TradingModal({
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-text-secondary">Est. Gas Fee</span>
-                    <span className="text-text-primary font-medium">
+                    <span className="text-white/60">Est. Gas Fee</span>
+                    <span className="text-white font-semibold">
                       {formatBigInt(estimatedGasFee, 18, 4)} BNB
                     </span>
                   </div>
-                  <div className="h-px bg-border-subtle" />
-                  <div className="flex justify-between">
-                    <span className="text-text-primary font-semibold">
-                      Total Cost
-                    </span>
-                    <span className="text-primary font-bold text-lg">
+                  <div className="h-px bg-white/10" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-white font-bold">Total Cost</span>
+                    <span className="text-primary font-bold text-xl">
                       {isLoadingCost ? (
                         <LoadingSpinner size="sm" />
                       ) : (
@@ -322,17 +323,16 @@ export function TradingModal({
               )}
             </div>
 
-            <DialogFooter className="flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex-col sm:flex-row gap-3 pt-2">
               <Button
                 variant="outline"
                 onClick={handleCancel}
                 disabled={isExecuting}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto bg-white/5 hover:bg-white/10 border-white/10 text-white"
               >
                 Cancel
               </Button>
               <Button
-                variant={isYes ? "success" : "destructive"}
                 onClick={handleConfirm}
                 disabled={
                   isExecuting ||
@@ -341,7 +341,11 @@ export function TradingModal({
                   shareAmountBigInt <= BigInt(0) ||
                   isLoadingCost
                 }
-                className="w-full sm:w-auto min-w-[120px]"
+                className={`w-full sm:w-auto min-w-[140px] font-bold ${
+                  isYes
+                    ? "bg-gradient-to-br from-success/80 to-success hover:from-success hover:to-success/80"
+                    : "bg-gradient-to-br from-error/80 to-error hover:from-error hover:to-error/80"
+                } text-white shadow-lg`}
               >
                 {isExecuting ? (
                   <div className="flex items-center gap-2">
@@ -349,7 +353,7 @@ export function TradingModal({
                     <span>Processing...</span>
                   </div>
                 ) : (
-                  `Buy ${isYes ? "YES" : "NO"}`
+                  `Buy ${isYes ? "YES" : "NO"} Shares`
                 )}
               </Button>
             </DialogFooter>

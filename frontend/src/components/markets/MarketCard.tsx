@@ -66,7 +66,7 @@ export function MarketCard({
 
   const cardContent = (
     <div
-      className={`bg-gradient-to-br from-white/[0.07] to-white/[0.03] border border-white/10 backdrop-blur-xl p-5 rounded-2xl hover:from-white/[0.1] hover:to-white/[0.05] hover:border-white/20 transition-all duration-300 h-full flex flex-col shadow-lg ${className}`}
+      className={`bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300 h-full flex flex-col shadow-lg ${className}`}
     >
       {/* Header: Asset badge and volume */}
       <div className="flex items-center justify-between mb-4">

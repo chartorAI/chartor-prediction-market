@@ -118,39 +118,45 @@ export default function Home() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
               <motion.div
-                className="bg-white/5 border border-white/10 backdrop-blur-xl p-6 rounded-2xl"
+                className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <div className="text-4xl font-bold text-white mb-2">
+                <div className="text-3xl font-bold text-white mb-1">
                   {activeMarkets.length}
                 </div>
-                <div className="text-white/60">Active Markets</div>
+                <div className="text-white/60 text-sm font-medium">
+                  Active Markets
+                </div>
               </motion.div>
               <motion.div
-                className="bg-white/5 border border-white/10 backdrop-blur-xl p-6 rounded-2xl"
+                className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <div className="text-4xl font-bold text-white mb-2">
+                <div className="text-3xl font-bold text-white mb-1">
                   {(Number(totalVolume) / 1e18).toFixed(2)}
                 </div>
-                <div className="text-white/60">Total Volume (BNB)</div>
+                <div className="text-white/60 text-sm font-medium">
+                  Total Volume (BNB)
+                </div>
               </motion.div>
               <motion.div
-                className="bg-white/5 border border-white/10 backdrop-blur-xl p-6 rounded-2xl"
+                className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <div className="text-4xl font-bold text-white mb-2">
+                <div className="text-3xl font-bold text-white mb-1">
                   {priceMarkets.length + liquidityMarkets.length}
                 </div>
-                <div className="text-white/60">Total Predictions</div>
+                <div className="text-white/60 text-sm font-medium">
+                  Total Predictions
+                </div>
               </motion.div>
             </div>
           </motion.div>
@@ -172,28 +178,28 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
             <Link href="/markets/price">
               <motion.div
-                className="bg-white/5 border border-white/10 backdrop-blur-xl p-8 rounded-3xl hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer group relative overflow-hidden"
-                whileHover={{ y: -5 }}
+                className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-6 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-primary/30 transition-all duration-300 cursor-pointer group relative overflow-hidden"
+                whileHover={{ y: -3 }}
               >
                 <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center mb-6">
-                    <TrendingUp className="w-7 h-7 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center mb-4 shadow-lg">
+                    <TrendingUp className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-primary transition-colors">
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary transition-colors">
                     Price Markets
                   </h3>
-                  <p className="text-white/60 mb-6">
+                  <p className="text-white/60 text-sm mb-4 leading-relaxed">
                     Predict future prices of BTC, ETH, BNB, GOLD, and OIL using
                     Pyth oracle data
                   </p>
                   <div className="flex items-center justify-between">
-                    <span className="text-primary font-semibold">
+                    <span className="text-primary font-semibold text-sm">
                       {priceMarkets.length} active markets
                     </span>
-                    <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-2 transition-transform" />
+                    <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -202,25 +208,25 @@ export default function Home() {
 
             <Link href="/markets/liquidity">
               <motion.div
-                className="bg-white/5 border border-white/10 backdrop-blur-xl p-8 rounded-3xl hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer group relative overflow-hidden"
-                whileHover={{ y: -5 }}
+                className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-6 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-primary/30 transition-all duration-300 cursor-pointer group relative overflow-hidden"
+                whileHover={{ y: -3 }}
               >
                 <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center mb-6">
-                    <Droplets className="w-7 h-7 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center mb-4 shadow-lg">
+                    <Droplets className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-primary transition-colors">
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary transition-colors">
                     Liquidity Markets
                   </h3>
-                  <p className="text-white/60 mb-6">
+                  <p className="text-white/60 text-sm mb-4 leading-relaxed">
                     Forecast BNB/USDT pool liquidity on PancakeSwap V3 using
                     on-chain data
                   </p>
                   <div className="flex items-center justify-between">
-                    <span className="text-primary font-semibold">
+                    <span className="text-primary font-semibold text-sm">
                       {liquidityMarkets.length} active markets
                     </span>
-                    <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-2 transition-transform" />
+                    <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -262,23 +268,25 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                className="bg-white/5 border border-white/10 rounded-3xl p-6 hover:bg-white/10 transition-all"
+                className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl rounded-2xl p-5 shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-white" />
+                <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center mb-3 shadow-lg">
+                  <feature.icon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-lg font-semibold text-white mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-white/60">{feature.description}</p>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  {feature.description}
+                </p>
               </motion.div>
             ))}
           </div>
