@@ -7,7 +7,6 @@ import {
   LIQUIDITY_MARKET_ABI,
   getContractAddresses,
 } from "@/lib/contracts"
-import { useMarketPrice } from "./useMarketPrices"
 import type { Position, PositionWithPayout } from "@/types"
 
 const POLLING_INTERVAL = 10000 // 10 seconds
@@ -18,7 +17,6 @@ const POLLING_INTERVAL = 10000 // 10 seconds
 export function usePositionPayout(position: Position | null) {
   const chainId = 97 // BNB Testnet
   const addresses = getContractAddresses(chainId)
-  const { price } = useMarketPrice(position?.market || null)
 
   const [positionWithPayout, setPositionWithPayout] =
     useState<PositionWithPayout | null>(null)
@@ -48,6 +46,33 @@ export function usePositionPayout(position: Position | null) {
     },
   })
 
+  // Fetch current prices for active markets
+  const priceContracts =
+    position && !position.market.resolved
+      ? [
+          {
+            address: contractAddress,
+            abi,
+            functionName: "getPriceYes" as const,
+            args: [marketId],
+          },
+          {
+            address: contractAddress,
+            abi,
+            functionName: "getPriceNo" as const,
+            args: [marketId],
+          },
+        ]
+      : []
+
+  const { data: priceData } = useReadContracts({
+    contracts: priceContracts,
+    query: {
+      enabled: !!position && !position.market.resolved,
+      refetchInterval: POLLING_INTERVAL,
+    },
+  })
+
   // Calculate payout and P&L
   useEffect(() => {
     if (!position) {
@@ -64,12 +89,23 @@ export function usePositionPayout(position: Position | null) {
         actualPayout = payoutData[0].result as bigint
         potentialPayout = actualPayout
       }
-    } else if (price) {
+    } else if (priceData) {
       // For active markets, calculate potential payout based on current prices
-      // Potential payout = (yesShares * yesPrice) + (noShares * noPrice)
-      const yesPayout = (position.yesShares * price.yesPrice) / BigInt(1e18)
-      const noPayout = (position.noShares * price.noPrice) / BigInt(1e18)
-      potentialPayout = yesPayout + noPayout
+      const yesPriceResult = priceData[0]
+      const noPriceResult = priceData[1]
+
+      if (
+        yesPriceResult?.status === "success" &&
+        noPriceResult?.status === "success"
+      ) {
+        const yesPrice = yesPriceResult.result as bigint
+        const noPrice = noPriceResult.result as bigint
+
+        // Potential payout = (yesShares * yesPrice) + (noShares * noPrice)
+        const yesPayout = (position.yesShares * yesPrice) / BigInt(1e18)
+        const noPayout = (position.noShares * noPrice) / BigInt(1e18)
+        potentialPayout = yesPayout + noPayout
+      }
     }
 
     // Calculate P&L
@@ -88,7 +124,7 @@ export function usePositionPayout(position: Position | null) {
     }
 
     setPositionWithPayout(positionWithPayoutData)
-  }, [position, price, payoutData])
+  }, [position, priceData, payoutData])
 
   return {
     position: positionWithPayout,

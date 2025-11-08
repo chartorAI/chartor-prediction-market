@@ -3,11 +3,7 @@
 import { useMarkets } from "@/lib/hooks/useMarkets"
 import { LoadingSpinner } from "@/components/common/LoadingSpinner"
 import { TradingViewChart } from "@/components/charts/TradingViewChart"
-import { TradingButtons } from "@/components/trading/TradingButtons"
-import {
-  calculateMarketPrices,
-  calculateMarketVolume,
-} from "@/lib/utils/marketPrices"
+import { MarketCard } from "@/components/markets/MarketCard"
 
 export default function LiquidityMarketsPage() {
   const { allMarkets, isLoading } = useMarkets()
@@ -76,74 +72,13 @@ export default function LiquidityMarketsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedMarkets.map((market) => {
-                // Calculate YES/NO prices using LMSR formula
-                const { yesPricePercent, noPricePercent } =
-                  calculateMarketPrices(market)
-                const totalVolume = calculateMarketVolume(market)
-
-                return (
-                  <div
-                    key={market.id}
-                    className="bg-white/5 border border-white/10 backdrop-blur-xl p-6 rounded-2xl hover:bg-white/10 hover:border-primary/50 transition-all flex flex-col"
-                  >
-                    {/* Market Header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs font-semibold text-primary uppercase px-3 py-1 bg-primary/10 rounded-full">
-                        BNB/USDT
-                      </span>
-                      <span className="text-xs text-white/40">
-                        {new Date(market.deadline * 1000).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-white text-sm mb-4 min-h-10 line-clamp-2">
-                      {market.description}
-                    </p>
-
-                    {/* Target Liquidity */}
-                    <div className="mb-4 p-4 bg-white/5 border border-white/10 rounded-xl">
-                      <div className="text-xs text-white/60 mb-2">
-                        Target Liquidity
-                      </div>
-                      <div className="text-2xl font-bold text-white">
-                        {market.type === "LIQUIDITY"
-                          ? (Number(market.targetLiquidity) / 1e18).toFixed(2)
-                          : "N/A"}{" "}
-                        <span className="text-base text-white/60">BNB</span>
-                      </div>
-                    </div>
-
-                    {/* YES/NO Prices from LMSR */}
-                    <div className="flex items-center gap-4 mb-4 pb-4 border-b border-white/10">
-                      <div className="flex-1">
-                        <div className="text-xs text-white/60 mb-1">YES</div>
-                        <div className="text-lg font-bold text-success">
-                          {yesPricePercent.toFixed(1)}%
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-xs text-white/60 mb-1">NO</div>
-                        <div className="text-lg font-bold text-error">
-                          {noPricePercent.toFixed(1)}%
-                        </div>
-                      </div>
-                      <div className="flex-1 text-right">
-                        <div className="text-xs text-white/60 mb-1">Volume</div>
-                        <div className="text-sm font-semibold text-white">
-                          {totalVolume.toFixed(2)} BNB
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Trading Buttons */}
-                    <div className="mt-auto">
-                      <TradingButtons market={market} />
-                    </div>
-                  </div>
-                )
-              })}
+              {sortedMarkets.map((market) => (
+                <MarketCard
+                  key={market.id}
+                  market={market}
+                  showTradingButtons={true}
+                />
+              ))}
             </div>
           )}
         </div>

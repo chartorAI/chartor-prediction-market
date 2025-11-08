@@ -1,231 +1,125 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
-import { formatBigInt } from "@/lib/utils/format"
+import Link from "next/link"
 import { CountdownTimer } from "@/components/common/CountdownTimer"
-import { TradingButtons } from "@/components/trading"
-import { WhaleTracker } from "@/components/whales"
-import { useMarketPrice } from "@/lib/hooks/useMarketPrices"
-import { useMarketDetails } from "@/lib/hooks/useMarketDetails"
-import { useResolveMarket } from "@/lib/hooks/useResolveMarket"
-import { Button } from "@/components/ui/button"
+import { TradingButtons } from "@/components/trading/TradingButtons"
+import {
+  calculateMarketPrices,
+  calculateMarketVolume,
+} from "@/lib/utils/marketPrices"
 import type { Market } from "@/types"
-import { Clock, Users, TrendingUp, CheckCircle2 } from "lucide-react"
 
 interface MarketCardProps {
   market: Market
+  showTradingButtons?: boolean
+  linkTo?: string
   className?: string
 }
 
-export function MarketCard({ market, className }: MarketCardProps) {
-  const { price, priceChange, isLoading: priceLoading } = useMarketPrice(market)
-  const { details, isLoading: detailsLoading } = useMarketDetails(market)
-  const { resolveMarket, isResolving } = useResolveMarket()
+export function MarketCard({
+  market,
+  showTradingButtons = true,
+  linkTo,
+  className = "",
+}: MarketCardProps) {
+  // Computed values
+  const { yesPricePercent, noPricePercent } = calculateMarketPrices(market)
+  const totalVolume = calculateMarketVolume(market)
+  const assetName = market.type === "PRICE" ? market.asset : "BNB/USDT"
 
-  const isExpired = market.deadline * 1000 < Date.now()
-  const isResolved = details?.resolutionStatus.isResolved || false
-
-  // Format target value based on market type
-  const targetValueDisplay =
-    market.type === "PRICE"
-      ? `$${formatBigInt(market.targetPrice, 8, 2)}`
-      : `${formatBigInt(market.targetLiquidity, 18, 2)} BNB`
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ y: -4 }}
-      className={cn("glass-card p-6 relative overflow-hidden", className)}
-    >
-      {/* Resolved Badge */}
-      {isResolved && (
-        <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-primary/20 border border-primary text-primary text-xs font-semibold">
-          Resolved
+  // Render helpers
+  const renderTargetInfo = () => {
+    if (market.type === "PRICE") {
+      const targetPrice = (Number(market.targetPrice) / 1e8).toFixed(2)
+      return (
+        <div className="bg-white/[0.03] rounded-lg px-3 py-2 mb-3">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs text-white/50 font-medium">
+              Target Price
+            </span>
+            <span className="text-sm text-white font-semibold">
+              USD {targetPrice}
+            </span>
+          </div>
         </div>
-      )}
+      )
+    }
 
-      {/* Market Description */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-text-primary mb-2">
-          {market.description}
-        </h3>
-        <div className="flex items-center gap-2 text-sm text-text-secondary">
-          <span className="font-medium">Target:</span>
-          <span className="text-text-primary font-mono">
-            {targetValueDisplay}
+    if (market.type === "LIQUIDITY") {
+      const targetLiquidity = (Number(market.targetLiquidity) / 1e18).toFixed(2)
+      return (
+        <div className="bg-white/[0.03] rounded-lg px-3 py-2 mb-3">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs text-white/50 font-medium">
+              Target Liquidity
+            </span>
+            <span className="text-sm text-white font-semibold">
+              {targetLiquidity} BNB
+            </span>
+          </div>
+        </div>
+      )
+    }
+
+    return null
+  }
+
+  const cardContent = (
+    <div
+      className={`bg-gradient-to-br from-white/[0.07] to-white/[0.03] border border-white/10 backdrop-blur-xl p-5 rounded-2xl hover:from-white/[0.1] hover:to-white/[0.05] hover:border-white/20 transition-all duration-300 h-full flex flex-col shadow-lg ${className}`}
+    >
+      {/* Header: Asset badge and volume */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-bold text-primary uppercase px-3 py-1.5 bg-primary/20 rounded-lg border border-primary/30">
+          {assetName}
+        </span>
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary/60"></div>
+          <span className="text-xs text-white/60 font-medium">
+            {totalVolume.toFixed(2)} BNB
           </span>
         </div>
       </div>
 
-      {/* YES/NO Prices */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <PriceDisplay
-          label="YES"
-          percentage={price?.yesPricePercent || 0}
-          change={priceChange?.yesPriceChange}
-          isLoading={priceLoading}
-          variant="yes"
-        />
-        <PriceDisplay
-          label="NO"
-          percentage={price?.noPricePercent || 0}
-          change={priceChange?.noPriceChange}
-          isLoading={priceLoading}
-          variant="no"
-        />
-      </div>
+      {/* Market question */}
+      <h3 className="text-base font-semibold text-white mb-4 line-clamp-2 leading-relaxed min-h-[3rem]">
+        {market.description}
+      </h3>
 
-      {/* Market Stats */}
-      <div className="flex items-center justify-between mb-4 text-sm">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 text-text-secondary">
-            <TrendingUp className="w-4 h-4" />
-            <span>
-              {details
-                ? `${formatBigInt(details.marketBalance, 18, 2)} BNB`
-                : "..."}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 text-text-secondary">
-            <Users className="w-4 h-4" />
-            <span>{details ? details.participantCount.toString() : "..."}</span>
-          </div>
-        </div>
-      </div>
+      {/* Target information */}
+      {renderTargetInfo()}
 
-      {/* Countdown Timer */}
-      <div className="mb-4 flex items-center gap-2">
-        <Clock className="w-4 h-4 text-text-secondary" />
+      {/* Countdown timer */}
+      <div className="mb-4 px-3 py-2 bg-white/[0.03] rounded-lg">
         <CountdownTimer
           targetDate={market.deadline * 1000}
           compact
-          className={cn(
-            "text-sm",
-            !isExpired &&
-              market.deadline * 1000 - Date.now() < 3600000 &&
-              "text-error"
-          )}
+          className="text-xs text-white/60 font-mono"
         />
       </div>
 
-      {/* Whale Tracker */}
-      <div className="mb-4">
-        <WhaleTracker market={market} maxDisplay={3} />
-      </div>
-
-      {/* Trading Buttons or Resolve Button */}
-      {!isResolved && !isExpired && <TradingButtons market={market} />}
-
-      {/* Resolve Market Button */}
-      {!isResolved && isExpired && (
-        <Button
-          onClick={() => resolveMarket(market)}
-          disabled={isResolving}
-          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold"
-        >
-          {isResolving ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-              Resolving...
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              Resolve Market
-            </>
-          )}
-        </Button>
-      )}
-
-      {/* Resolution Status */}
-      {isResolved && details && (
-        <div className="mt-4 p-4 rounded-lg bg-glass-medium border border-border-medium">
-          <div className="space-y-2">
-            <div className="text-center">
-              <span className="text-sm text-text-secondary">Winner: </span>
-              <span
-                className={cn(
-                  "text-lg font-bold",
-                  details.resolutionStatus.outcome
-                    ? "text-success"
-                    : "text-error"
-                )}
-              >
-                {details.resolutionStatus.outcome ? "YES" : "NO"}
-              </span>
-            </div>
-            {market.type === "PRICE" && market.currentPrice && (
-              <div className="text-center text-sm">
-                <span className="text-text-secondary">Final Price: </span>
-                <span className="text-text-primary font-mono font-medium">
-                  ${(Number(market.currentPrice) / 1e8).toFixed(2)}
-                </span>
-              </div>
-            )}
-            {market.type === "LIQUIDITY" && market.currentLiquidity && (
-              <div className="text-center text-sm">
-                <span className="text-text-secondary">Final Liquidity: </span>
-                <span className="text-text-primary font-mono font-medium">
-                  {(Number(market.currentLiquidity) / 1e18).toFixed(2)} BNB
-                </span>
-              </div>
-            )}
+      {/* Action area: Trading buttons or view link */}
+      <div className="mt-auto">
+        {showTradingButtons ? (
+          <TradingButtons market={market} />
+        ) : (
+          <div className="flex items-center justify-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all py-3 px-4 bg-primary/10 rounded-xl hover:bg-primary/20 border border-primary/20">
+            <span>View Market</span>
+            <span className="text-base">→</span>
           </div>
-        </div>
-      )}
-    </motion.div>
+        )}
+      </div>
+    </div>
   )
-}
 
-interface PriceDisplayProps {
-  label: string
-  percentage: number
-  change?: "up" | "down" | "none"
-  isLoading: boolean
-  variant: "yes" | "no"
-}
+  // Wrap in Link if linkTo is provided and trading buttons are hidden
+  if (linkTo && !showTradingButtons) {
+    return (
+      <Link href={linkTo} className="block h-full">
+        {cardContent}
+      </Link>
+    )
+  }
 
-function PriceDisplay({
-  label,
-  percentage,
-  change,
-  isLoading,
-  variant,
-}: PriceDisplayProps) {
-  const color = variant === "yes" ? "text-success" : "text-error"
-  const bgColor =
-    variant === "yes"
-      ? "bg-success/10 border-success/30"
-      : "bg-error/10 border-error/30"
-
-  return (
-    <motion.div
-      animate={
-        change === "up"
-          ? { scale: [1, 1.05, 1] }
-          : change === "down"
-            ? { scale: [1, 0.95, 1] }
-            : {}
-      }
-      transition={{ duration: 0.3 }}
-      className={cn("p-3 rounded-lg border transition-all", bgColor)}
-    >
-      <div className="text-xs text-text-secondary mb-1">{label}</div>
-      {isLoading ? (
-        <div className="h-7 flex items-center">
-          <div className="w-12 h-4 bg-glass-medium animate-pulse rounded" />
-        </div>
-      ) : (
-        <div className="flex items-baseline gap-1">
-          <span className={cn("text-2xl font-bold font-mono", color)}>
-            {percentage.toFixed(1)}
-          </span>
-          <span className={cn("text-sm", color)}>%</span>
-        </div>
-      )}
-    </motion.div>
-  )
+  return cardContent
 }

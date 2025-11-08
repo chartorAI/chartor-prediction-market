@@ -2,35 +2,15 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
+import toast from "react-hot-toast"
 import { TradingModal } from "./TradingModal"
 import { useAuthStore } from "@/stores/authStore"
+import { calculateMarketPrices } from "@/lib/utils/marketPrices"
 import type { Market } from "@/types"
-import toast from "react-hot-toast"
 
-/**
- * TradingButtons Component
- *
- * Displays prominent YES and NO trading buttons for a market.
- * Features:
- * - Color-coded buttons (green for YES, red for NO)
- * - Hover effects and animations with Framer Motion
- * - Opens TradingModal on click
- * - Disabled state for expired markets
- * - Loading state during transaction execution
- * - Authentication requirement
- *
- * @example
- * ```tsx
- * <TradingButtons market={market} isExecuting={false} />
- * ```
- */
 interface TradingButtonsProps {
-  /** The market to trade on */
   market: Market
-  /** Whether a transaction is currently executing */
   isExecuting?: boolean
-  /** Optional className for styling */
   className?: string
 }
 
@@ -39,109 +19,102 @@ export function TradingButtons({
   isExecuting = false,
   className = "",
 }: TradingButtonsProps) {
+  // State
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedIsYes, setSelectedIsYes] = useState(true)
   const { isAuthenticated } = useAuthStore()
 
-  // Check if market is expired
+  // Market state checks
   const isExpired = market.deadline * 1000 < Date.now()
-
-  // Check if market is resolved
   const isResolved = market.resolved
-
-  // Determine if buttons should be disabled
   const isDisabled = isExpired || isResolved || isExecuting
 
+  // Calculate prices
+  const { yesPricePercent, noPricePercent } = calculateMarketPrices(market)
+  
+  // Calculate price in BNB (assuming 1 share costs the probability in BNB)
+  const yesPriceBNB = yesPricePercent / 100
+  const noPriceBNB = noPricePercent / 100
+
+  // Handlers
   const handleButtonClick = (isYes: boolean) => {
-    // Require authentication
     if (!isAuthenticated) {
       toast.error("Please sign in to trade")
       return
     }
 
-    // Prevent trading on expired markets
     if (isExpired) {
       toast.error("This market has expired")
       return
     }
 
-    // Prevent trading on resolved markets
     if (isResolved) {
       toast.error("This market has been resolved")
       return
     }
 
-    // Open modal with selected position
     setSelectedIsYes(isYes)
     setIsModalOpen(true)
+  }
+
+  // Render helpers
+  const renderButtonContent = (
+    label: string,
+    price: number,
+    percentage: number,
+    isYesButton: boolean
+  ) => {
+    if (isExecuting) {
+      return (
+        <span className="flex items-center justify-center gap-1.5">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+            className={`w-3 h-3 border-2 ${
+              isYesButton ? "border-white" : "border-white/50"
+            } border-t-transparent rounded-full`}
+          />
+          <span className="text-xs">Processing...</span>
+        </span>
+      )
+    }
+
+    return (
+      <div className="flex flex-col items-start gap-1 w-full">
+        <div className="flex items-center justify-between w-full">
+          <span className="font-semibold text-base">{label}</span>
+          <span className="text-sm font-medium">{percentage.toFixed(1)}%</span>
+        </div>
+        <span className="text-xs opacity-80">{price.toFixed(4)} BNB</span>
+      </div>
+    )
   }
 
   return (
     <>
       <div className={`flex gap-3 ${className}`}>
         {/* YES Button */}
-        <motion.div
-          className="flex-1"
-          whileHover={!isDisabled ? { scale: 1.02 } : {}}
-          whileTap={!isDisabled ? { scale: 0.98 } : {}}
-          transition={{ duration: 0.2 }}
+        <button
+          onClick={() => handleButtonClick(true)}
+          disabled={isDisabled}
+          className="flex-1 px-4 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white"
+          style={{ backgroundColor: '#3F1A8F' }}
         >
-          <Button
-            onClick={() => handleButtonClick(true)}
-            disabled={isDisabled}
-            className="w-full h-12 bg-success hover:bg-success/90 text-white font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            variant="default"
-          >
-            {isExecuting ? (
-              <span className="flex items-center gap-2">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                />
-                Processing...
-              </span>
-            ) : (
-              "YES"
-            )}
-          </Button>
-        </motion.div>
+          {renderButtonContent("Yes", yesPriceBNB, yesPricePercent, true)}
+        </button>
 
         {/* NO Button */}
-        <motion.div
-          className="flex-1"
-          whileHover={!isDisabled ? { scale: 1.02 } : {}}
-          whileTap={!isDisabled ? { scale: 0.98 } : {}}
-          transition={{ duration: 0.2 }}
+        <button
+          onClick={() => handleButtonClick(false)}
+          disabled={isDisabled}
+          className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white/70 hover:text-white"
         >
-          <Button
-            onClick={() => handleButtonClick(false)}
-            disabled={isDisabled}
-            className="w-full h-12 bg-error hover:bg-error/90 text-white font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            variant="default"
-          >
-            {isExecuting ? (
-              <span className="flex items-center gap-2">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                />
-                Processing...
-              </span>
-            ) : (
-              "NO"
-            )}
-          </Button>
-        </motion.div>
+          {renderButtonContent("No", noPriceBNB, noPricePercent, false)}
+        </button>
       </div>
 
       {/* Trading Modal */}

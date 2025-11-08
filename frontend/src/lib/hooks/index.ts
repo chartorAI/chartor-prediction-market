@@ -2,7 +2,6 @@ export { useContract } from "./useContract"
 export { useContractRead } from "./useContractRead"
 export { useMarkets, useMarketsByAsset } from "./useMarkets"
 export { useMarketDetails } from "./useMarketDetails"
-export { useMarketPrices, useMarketPrice } from "./useMarketPrices"
 export {
   useUserPositions,
   useUserPosition,

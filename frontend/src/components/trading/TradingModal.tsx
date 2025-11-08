@@ -31,6 +31,12 @@ const shareAmountSchema = z
   .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Share amount must be a positive number",
   })
+  .refine((val) => Number.isInteger(Number(val)), {
+    message: "Share amount must be a whole number (no decimals)",
+  })
+  .refine((val) => Number(val) >= 1, {
+    message: "Minimum purchase is 1 share",
+  })
   .refine((val) => Number(val) <= 1000000, {
     message: "Share amount is too large",
   })
@@ -239,18 +245,25 @@ export function TradingModal({
                   htmlFor="shareAmount"
                   className="text-sm font-medium text-text-primary"
                 >
-                  Number of Shares
+                  Number of Shares (whole numbers only)
                 </label>
                 <Input
                   id="shareAmount"
                   type="number"
-                  placeholder="Enter share amount"
+                  placeholder="Enter share amount (e.g., 1, 2, 3...)"
                   value={shareAmount}
-                  onChange={(e) => setShareAmount(e.target.value)}
+                  onChange={(e) => {
+                    // Only allow integers
+                    const value = e.target.value
+                    if (value === "" || /^\d+$/.test(value)) {
+                      setShareAmount(value)
+                    }
+                  }}
                   disabled={isExecuting}
                   className="text-lg h-12"
-                  min="0"
-                  step="0.01"
+                  min="1"
+                  step="1"
+                  pattern="[0-9]*"
                 />
                 {error && (
                   <motion.p
@@ -261,6 +274,9 @@ export function TradingModal({
                     {error}
                   </motion.p>
                 )}
+                <p className="text-xs text-text-secondary">
+                  You can only purchase whole shares (1, 2, 3, etc.)
+                </p>
               </div>
 
               {/* Cost Breakdown */}
