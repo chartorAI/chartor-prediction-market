@@ -113,8 +113,8 @@ export function useMarkets() {
                 liquidityParam: config.liquidityParam,
                 description: config.description,
                 creator: config.creator,
-                qYes: 0n, // Will be fetched separately
-                qNo: 0n, // Will be fetched separately
+                qYes: BigInt(0), // Will be fetched separately
+                qNo: BigInt(0), // Will be fetched separately
                 resolved: false, // Will be fetched separately
                 yesWins: false,
               }
@@ -141,8 +141,8 @@ export function useMarkets() {
                 liquidityParam: config.liquidityParam,
                 description: config.description,
                 creator: config.creator,
-                qYes: 0n, // Will be fetched separately
-                qNo: 0n, // Will be fetched separately
+                qYes: BigInt(0), // Will be fetched separately
+                qNo: BigInt(0), // Will be fetched separately
                 resolved: false, // Will be fetched separately
                 yesWins: false,
               }

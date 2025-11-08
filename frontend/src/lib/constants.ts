@@ -24,7 +24,7 @@ export const WHALE_UPDATE_INTERVAL = 15000 // 15 seconds
 export const MAX_WHALE_DISPLAY = 3
 export const ADDRESS_TRUNCATE_LENGTH = 6
 
-// TradingView symbols
+// TradingView symbols (exchange:symbol format)
 export const TRADINGVIEW_SYMBOLS: Record<Asset, string> = {
   BTC: "BINANCE:BTCUSDT",
   ETH: "BINANCE:ETHUSDT",

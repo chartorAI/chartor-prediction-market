@@ -36,7 +36,7 @@ export function useMarketDetails(market: Market | null) {
     : addresses.liquidityMarket
   const abi = isPriceMarket ? PREDICTION_MARKET_ABI : LIQUIDITY_MARKET_ABI
 
-  const marketId = market ? BigInt(market.id) : 0n
+  const marketId = market ? BigInt(market.id) : BigInt(0)
 
   // Prepare contract calls
   const contracts = market
@@ -157,7 +157,7 @@ function processMarketDetails(
         isResolved: (resolutionResult.result as any)[0],
         outcome: (resolutionResult.result as any)[1],
       },
-      whales: whalesResult.result as MarketWhales,
+      whales: whalesResult.result as unknown as MarketWhales,
     }
 
     // Add current price for price markets

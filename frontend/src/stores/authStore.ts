@@ -5,11 +5,13 @@ interface AuthState {
   userAddress: string | null
   smartAccount: any | null
   web3AuthProvider: any | null
+  balance: bigint | null
   isLoading: boolean
   error: string | null
 
   // Actions
   setAuthenticated: (address: string, smartAccount: any, provider: any) => void
+  setBalance: (balance: bigint) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   logout: () => void
@@ -20,6 +22,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   userAddress: null,
   smartAccount: null,
   web3AuthProvider: null,
+  balance: null,
   isLoading: false,
   error: null,
 
@@ -32,6 +35,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       error: null,
     }),
 
+  setBalance: (balance) => set({ balance }),
+
   setLoading: (loading) => set({ isLoading: loading }),
 
   setError: (error) => set({ error }),
@@ -42,6 +47,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       userAddress: null,
       smartAccount: null,
       web3AuthProvider: null,
+      balance: null,
       error: null,
     }),
 }))

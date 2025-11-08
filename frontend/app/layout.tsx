@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import Script from "next/script"
 import "./globals.css"
 import { Toaster } from "react-hot-toast"
 import { AuthProvider } from "@/lib/web3/AuthProvider"
@@ -26,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="antialiased flex flex-col min-h-screen">
+        <Script src="https://s3.tradingview.com/tv.js" strategy="lazyOnload" />
         <ErrorBoundary>
           <WagmiProvider>
             <AuthProvider>

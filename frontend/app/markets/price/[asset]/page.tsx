@@ -1,21 +1,62 @@
 "use client"
 
+import { useParams } from "next/navigation"
+import { useEffect } from "react"
 import { useMarkets } from "@/lib/hooks/useMarkets"
+import { useMarketStore } from "@/stores/marketStore"
 import { LoadingSpinner } from "@/components/common/LoadingSpinner"
 import { TradingViewChart } from "@/components/charts/TradingViewChart"
+import { TRADINGVIEW_SYMBOLS, ASSETS } from "@/lib/constants"
+import type { Asset } from "@/types"
 
-export default function LiquidityMarketsPage() {
+export default function AssetMarketPage() {
+  const params = useParams()
+  const assetParam = params.asset as string
+
+  // Convert URL param to uppercase Asset type
+  const asset = assetParam?.toUpperCase() as Asset
+
   const { allMarkets, isLoading } = useMarkets()
+  const { setSelectedAsset } = useMarketStore()
 
-  // Filter for liquidity markets only
-  const liquidityMarkets = allMarkets.filter(
-    (m) => m.type === "LIQUIDITY" && !m.resolved
+  // Validate asset
+  const isValidAsset = ASSETS.includes(asset)
+
+  // Update selected asset in store
+  useEffect(() => {
+    if (isValidAsset) {
+      setSelectedAsset(asset)
+    }
+  }, [asset, isValidAsset, setSelectedAsset])
+
+  // Filter markets for this asset
+  const assetMarkets = allMarkets.filter(
+    (m) => m.type === "PRICE" && m.asset === asset && !m.resolved
   )
 
   // Sort by deadline (soonest first)
-  const sortedMarkets = [...liquidityMarkets].sort(
+  const sortedMarkets = [...assetMarkets].sort(
     (a, b) => a.deadline - b.deadline
   )
+
+  if (!isValidAsset) {
+    return (
+      <div className="min-h-screen bg-background-primary">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-16">
+            <h1 className="text-3xl font-bold text-white mb-4">
+              Invalid Asset
+            </h1>
+            <p className="text-white/60">
+              The asset "{assetParam}" is not supported.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const symbol = TRADINGVIEW_SYMBOLS[asset]
 
   return (
     <div className="min-h-screen bg-background-primary">
@@ -23,22 +64,22 @@ export default function LiquidityMarketsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            Liquidity Markets
+            {asset} Price Markets
           </h1>
           <p className="text-white/60">
-            Predict BNB/USDT pool liquidity on PancakeSwap
+            Predict future {asset} prices and trade on outcomes
           </p>
         </div>
 
-        {/* TradingView Chart for BNB/USDT */}
+        {/* TradingView Chart */}
         <div className="mb-8">
-          <TradingViewChart symbol="BINANCE:BNBUSDT" asset="BNB" height={500} />
+          <TradingViewChart symbol={symbol} asset={asset} height={500} />
         </div>
 
         {/* Markets List */}
         <div>
           <h2 className="text-2xl font-bold text-white mb-6">
-            Active Liquidity Markets
+            Active Markets for {asset}
           </h2>
 
           {isLoading ? (
@@ -48,7 +89,7 @@ export default function LiquidityMarketsPage() {
           ) : sortedMarkets.length === 0 ? (
             <div className="glass p-12 rounded-2xl text-center">
               <p className="text-white/60 text-lg mb-2">
-                No active liquidity markets
+                No active markets for {asset}
               </p>
               <p className="text-white/40 text-sm">
                 Check back soon for new prediction markets
@@ -64,7 +105,7 @@ export default function LiquidityMarketsPage() {
                   {/* Market Header */}
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-semibold text-primary uppercase">
-                      BNB/USDT Liquidity
+                      {asset}
                     </span>
                     <span className="text-xs text-white/40">
                       Ends{" "}
@@ -77,18 +118,17 @@ export default function LiquidityMarketsPage() {
                     {market.description}
                   </p>
 
-                  {/* Target Liquidity */}
-                  <div className="mb-4 p-3 bg-white/5 rounded-lg">
-                    <div className="text-xs text-white/60 mb-1">
-                      Target Liquidity
+                  {/* Target Price */}
+                  {market.type === "PRICE" && (
+                    <div className="mb-4 p-3 bg-white/5 rounded-lg">
+                      <div className="text-xs text-white/60 mb-1">
+                        Target Price
+                      </div>
+                      <div className="text-lg font-bold text-white">
+                        ${(Number(market.targetPrice) / 1e8).toFixed(2)}
+                      </div>
                     </div>
-                    <div className="text-lg font-bold text-white">
-                      {market.type === "LIQUIDITY"
-                        ? (Number(market.targetLiquidity) / 1e18).toFixed(2)
-                        : "N/A"}{" "}
-                      BNB
-                    </div>
-                  </div>
+                  )}
 
                   {/* Stats */}
                   <div className="flex items-center justify-between text-xs text-white/60 mb-4">

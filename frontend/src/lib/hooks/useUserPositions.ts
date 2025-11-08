@@ -64,7 +64,10 @@ export function useUserPositions() {
         const positionData = result.result as any
 
         // Only include positions where user has shares
-        if (positionData.yesShares > 0n || positionData.noShares > 0n) {
+        if (
+          positionData.yesShares > BigInt(0) ||
+          positionData.noShares > BigInt(0)
+        ) {
           const position: Position = {
             marketId: market.id,
             userAddress: address,
@@ -109,7 +112,7 @@ export function useUserPosition(market: Market | null) {
     ? addresses.predictionMarket
     : addresses.liquidityMarket
   const abi = isPriceMarket ? PREDICTION_MARKET_ABI : LIQUIDITY_MARKET_ABI
-  const marketId = market ? BigInt(market.id) : 0n
+  const marketId = market ? BigInt(market.id) : BigInt(0)
 
   const { data, isLoading, refetch } = useReadContracts({
     contracts:
@@ -142,7 +145,8 @@ export function useUserPosition(market: Market | null) {
       : null
 
   const hasPosition =
-    position && (position.yesShares > 0n || position.noShares > 0n)
+    position &&
+    (position.yesShares > BigInt(0) || position.noShares > BigInt(0))
 
   return {
     position,

@@ -28,7 +28,7 @@ export function usePositionPayout(position: Position | null) {
     ? addresses.predictionMarket
     : addresses.liquidityMarket
   const abi = isPriceMarket ? PREDICTION_MARKET_ABI : LIQUIDITY_MARKET_ABI
-  const marketId = position ? BigInt(position.marketId) : 0n
+  const marketId = position ? BigInt(position.marketId) : BigInt(0)
 
   // Fetch trader payout (for resolved markets)
   const { data: payoutData } = useReadContracts({
@@ -55,7 +55,7 @@ export function usePositionPayout(position: Position | null) {
       return
     }
 
-    let potentialPayout = 0n
+    let potentialPayout = BigInt(0)
     let actualPayout: bigint | undefined
 
     if (position.market.resolved) {
@@ -75,8 +75,8 @@ export function usePositionPayout(position: Position | null) {
     // Calculate P&L
     const profitLoss = potentialPayout - position.totalStaked
     const profitLossPercentage =
-      position.totalStaked > 0n
-        ? Number((profitLoss * 10000n) / position.totalStaked) / 100
+      position.totalStaked > BigInt(0)
+        ? Number((profitLoss * BigInt(10000)) / position.totalStaked) / 100
         : 0
 
     const positionWithPayoutData: PositionWithPayout = {
@@ -175,7 +175,7 @@ export function usePositionPayouts(positions: Position[]) {
     const results: PositionWithPayout[] = []
 
     positions.forEach((position, index) => {
-      let potentialPayout = 0n
+      let potentialPayout = BigInt(0)
       let actualPayout: bigint | undefined
 
       if (position.market.resolved) {
@@ -218,8 +218,8 @@ export function usePositionPayouts(positions: Position[]) {
       // Calculate P&L
       const profitLoss = potentialPayout - position.totalStaked
       const profitLossPercentage =
-        position.totalStaked > 0n
-          ? Number((profitLoss * 10000n) / position.totalStaked) / 100
+        position.totalStaked > BigInt(0)
+          ? Number((profitLoss * BigInt(10000)) / position.totalStaked) / 100
           : 0
 
       results.push({
@@ -237,16 +237,16 @@ export function usePositionPayouts(positions: Position[]) {
   // Calculate total stats
   const totalStaked = positionsWithPayouts.reduce(
     (sum, p) => sum + p.totalStaked,
-    0n
+    BigInt(0)
   )
   const totalPayout = positionsWithPayouts.reduce(
     (sum, p) => sum + p.potentialPayout,
-    0n
+    BigInt(0)
   )
   const totalProfitLoss = totalPayout - totalStaked
   const totalProfitLossPercentage =
-    totalStaked > 0n
-      ? Number((totalProfitLoss * 10000n) / totalStaked) / 100
+    totalStaked > BigInt(0)
+      ? Number((totalProfitLoss * BigInt(10000)) / totalStaked) / 100
       : 0
 
   return {

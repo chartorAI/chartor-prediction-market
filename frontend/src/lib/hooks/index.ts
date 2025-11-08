@@ -15,3 +15,7 @@ export {
   useTopWhales,
   copyAddressToClipboard,
 } from "./useWhaleData"
+export { useTrade } from "./useTrade"
+export { useCreateMarket } from "./useCreateMarket"
+export { useResolveMarket } from "./useResolveMarket"
+export { useBalance } from "./useBalance"

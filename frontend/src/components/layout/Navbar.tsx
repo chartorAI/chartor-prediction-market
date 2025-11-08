@@ -3,12 +3,16 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Plus } from "lucide-react"
+import { Menu, X, Plus, Wallet, Copy, Check } from "lucide-react"
 import { useAuth } from "@/lib/web3/AuthProvider"
 import { useAuthStore } from "@/stores/authStore"
+import { useBalance } from "@/lib/hooks/useBalance"
 import { Button } from "@/components/ui/button"
-import { truncateAddress } from "@/lib/utils/format"
+import { CreateMarketModal } from "@/components/markets/CreateMarketModal"
+import { useCreateMarket } from "@/lib/hooks/useCreateMarket"
+import { truncateAddress, formatBigInt } from "@/lib/utils/format"
 import { cn } from "@/lib/utils/cn"
+import { toast } from "react-hot-toast"
 
 interface NavbarProps {
   className?: string
@@ -16,9 +20,13 @@ interface NavbarProps {
 
 export function Navbar({ className }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [createMarketModalOpen, setCreateMarketModalOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
   const pathname = usePathname()
   const { login, logout } = useAuth()
   const { isAuthenticated, userAddress, isLoading } = useAuthStore()
+  const { balance, isLoading: balanceLoading } = useBalance()
+  const { createMarket, isCreating } = useCreateMarket()
 
   const marketTabs = [
     { label: "Price Markets", href: "/markets/price" },
@@ -30,8 +38,14 @@ export function Navbar({ className }: NavbarProps) {
   const handleLogin = async () => {
     try {
       await login()
-    } catch (error) {
-      console.error("Login error:", error)
+    } catch (error: any) {
+      console.error("Login error:", {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        stack: error?.stack,
+        raw: error,
+      })
     }
   }
 
@@ -40,6 +54,20 @@ export function Navbar({ className }: NavbarProps) {
       await logout()
     } catch (error) {
       console.error("Logout error:", error)
+    }
+  }
+
+  const handleCopyAddress = async () => {
+    if (!userAddress) return
+
+    try {
+      await navigator.clipboard.writeText(userAddress)
+      setCopied(true)
+      toast.success("Address copied to clipboard!")
+      setTimeout(() => setCopied(false), 2000)
+    } catch (error) {
+      console.error("Failed to copy address:", error)
+      toast.error("Failed to copy address")
     }
   }
 
@@ -102,6 +130,7 @@ export function Navbar({ className }: NavbarProps) {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setCreateMarketModalOpen(true)}
                 className="glass-button border-primary/50 hover:border-primary"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -112,11 +141,30 @@ export function Navbar({ className }: NavbarProps) {
             {/* Auth Button */}
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
-                <div className="glass px-4 py-2 rounded-lg">
+                {/* Balance Display */}
+                <div className="glass px-4 py-2 rounded-lg flex items-center gap-2">
+                  <Wallet className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-mono text-text-primary">
+                    {balanceLoading || balance === null
+                      ? "..."
+                      : `${formatBigInt(balance, 18, 4)} BNB`}
+                  </span>
+                </div>
+                {/* Address Display */}
+                <button
+                  onClick={handleCopyAddress}
+                  className="glass px-4 py-2 rounded-lg hover:bg-glass-medium transition-all flex items-center gap-2 group"
+                  title="Click to copy address"
+                >
                   <span className="text-sm font-mono text-text-primary">
                     {truncateAddress(userAddress || "")}
                   </span>
-                </div>
+                  {copied ? (
+                    <Check className="w-3 h-3 text-success" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-text-secondary group-hover:text-primary transition-colors" />
+                  )}
+                </button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -202,7 +250,10 @@ export function Navbar({ className }: NavbarProps) {
               <Button
                 variant="outline"
                 className="w-full glass-button border-primary/50 hover:border-primary"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  setCreateMarketModalOpen(true)
+                }}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Market
@@ -213,14 +264,35 @@ export function Navbar({ className }: NavbarProps) {
             <div className="pt-4 border-t border-border-subtle space-y-3">
               {isAuthenticated ? (
                 <>
+                  {/* Balance Display */}
                   <div className="glass px-4 py-3 rounded-lg">
-                    <p className="text-xs text-text-secondary mb-1">
-                      Wallet Address
+                    <p className="text-xs text-text-secondary mb-1 flex items-center gap-1">
+                      <Wallet className="w-3 h-3" />
+                      Balance
+                    </p>
+                    <p className="text-sm font-mono text-text-primary">
+                      {balanceLoading || balance === null
+                        ? "Loading..."
+                        : `${formatBigInt(balance, 18, 4)} BNB`}
+                    </p>
+                  </div>
+                  {/* Wallet Address */}
+                  <button
+                    onClick={handleCopyAddress}
+                    className="glass px-4 py-3 rounded-lg w-full text-left hover:bg-glass-medium transition-all"
+                  >
+                    <p className="text-xs text-text-secondary mb-1 flex items-center justify-between">
+                      <span>Wallet Address</span>
+                      {copied ? (
+                        <Check className="w-3 h-3 text-success" />
+                      ) : (
+                        <Copy className="w-3 h-3 text-text-secondary" />
+                      )}
                     </p>
                     <p className="text-sm font-mono text-text-primary">
                       {truncateAddress(userAddress || "")}
                     </p>
-                  </div>
+                  </button>
                   <Button
                     variant="outline"
                     className="w-full glass-button"
@@ -243,6 +315,19 @@ export function Navbar({ className }: NavbarProps) {
           </div>
         </div>
       )}
+
+      {/* Create Market Modal */}
+      <CreateMarketModal
+        isOpen={createMarketModalOpen}
+        onClose={() => setCreateMarketModalOpen(false)}
+        onSubmit={async (data) => {
+          const result = await createMarket(data)
+          if (result.success) {
+            setCreateMarketModalOpen(false)
+          }
+        }}
+        isSubmitting={isCreating}
+      />
     </nav>
   )
 }

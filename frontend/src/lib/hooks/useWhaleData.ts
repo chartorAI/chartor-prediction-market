@@ -34,7 +34,7 @@ export function useWhaleData(market: Market | null) {
     ? addresses.predictionMarket
     : addresses.liquidityMarket
   const abi = isPriceMarket ? PREDICTION_MARKET_ABI : LIQUIDITY_MARKET_ABI
-  const marketId = market ? BigInt(market.id) : 0n
+  const marketId = market ? BigInt(market.id) : BigInt(0)
 
   const { data, isLoading } = useReadContracts({
     contracts: market
@@ -60,7 +60,7 @@ export function useWhaleData(market: Market | null) {
       return
     }
 
-    const whaleData = data[0].result as MarketWhales
+    const whaleData = data[0].result as unknown as MarketWhales
     const formattedWhales: FormattedWhaleBet[] = []
 
     // Add largest YES bet if it exists
@@ -168,7 +168,7 @@ export function useWhalesData(markets: Market[]) {
       const result = data[index]
 
       if (result?.status === "success") {
-        const whaleData = result.result as MarketWhales
+        const whaleData = result.result as unknown as MarketWhales
         const formattedWhales: FormattedWhaleBet[] = []
 
         // Add largest YES bet

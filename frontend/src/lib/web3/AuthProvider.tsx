@@ -55,9 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setIsInitialized(true)
-      } catch (error) {
-        console.error("Failed to initialize Web3Auth:", error)
-        setError("Failed to initialize authentication")
+      } catch (error: any) {
+        console.error("Failed to initialize Web3Auth:", {
+          message: error?.message,
+          code: error?.code,
+          details: error?.details,
+          stack: error?.stack,
+          raw: error,
+        })
+        setError(error?.message || "Failed to initialize authentication")
       } finally {
         setLoading(false)
       }
@@ -74,8 +80,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const address = await getSmartAccountAddress(smartAccount)
         setAuthenticated(address, smartAccount, provider)
       }
-    } catch (error) {
-      console.error("Failed to restore session:", error)
+    } catch (error: any) {
+      console.error("Failed to restore session:", {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        stack: error?.stack,
+        raw: error,
+      })
     }
   }
 
@@ -95,8 +107,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setAuthenticated(address, smartAccount, provider)
     } catch (error: any) {
-      console.error("Login failed:", error)
-      setError(error.message || "Login failed")
+      console.error("Login failed:", {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        stack: error?.stack,
+        raw: error,
+      })
+      setError(error?.message || "Login failed")
       throw error
     } finally {
       setLoading(false)
@@ -109,8 +127,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await logoutWeb3Auth()
       logoutStore()
     } catch (error: any) {
-      console.error("Logout failed:", error)
-      setError(error.message || "Logout failed")
+      console.error("Logout failed:", {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        stack: error?.stack,
+        raw: error,
+      })
+      setError(error?.message || "Logout failed")
     } finally {
       setLoading(false)
     }

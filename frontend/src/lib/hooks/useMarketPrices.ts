@@ -159,7 +159,7 @@ export function useMarketPrice(market: Market | null) {
     ? addresses.predictionMarket
     : addresses.liquidityMarket
   const abi = isPriceMarket ? PREDICTION_MARKET_ABI : LIQUIDITY_MARKET_ABI
-  const marketId = market ? BigInt(market.id) : 0n
+  const marketId = market ? BigInt(market.id) : BigInt(0)
 
   const contracts = market
     ? [
