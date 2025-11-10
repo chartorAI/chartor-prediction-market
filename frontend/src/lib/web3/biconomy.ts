@@ -16,23 +16,18 @@ export const createSmartAccount = async (
       throw new Error("Provider is required")
     }
 
-    // Validate Biconomy configuration
     if (!biconomyConfig.bundlerUrl) {
       throw new Error("Biconomy bundler URL is not configured")
     }
 
     console.log("Creating ethers provider from Web3Auth...")
 
-    // Create ethers provider from Web3Auth provider
-    // Using ethers v6 BrowserProvider API
     const ethersProvider = new ethers.BrowserProvider(provider as any)
 
     console.log("Getting signer...")
 
-    // Get the signer from ethers provider
     const signer = await ethersProvider.getSigner()
 
-    // Get the address to verify connection
     const address = await signer.getAddress()
     console.log("Creating smart account for address:", address)
 
@@ -45,13 +40,11 @@ export const createSmartAccount = async (
 
     console.log("Creating Biconomy Smart Account...")
 
-    // Create Biconomy Smart Account using ethers signer
-    // This is the correct way according to official Biconomy documentation
     const smartAccount = await BiconomySmartAccountV2.create({
       chainId: biconomyConfig.chainId,
       bundler: bundler,
       entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
-      signer: signer, // ethers signer, not viem wallet client
+      signer: signer,
     })
 
     console.log("Smart account created successfully")
@@ -67,7 +60,6 @@ export const createSmartAccount = async (
       chainId: biconomyConfig.chainId,
     })
 
-    // Log additional context for debugging
     if (error?.data) {
       console.error("Error data:", error.data)
     }
@@ -98,7 +90,6 @@ export const sendTransaction = async (
       dataLength: transaction.data.length,
     })
 
-    // Build the transaction object for Biconomy
     const tx = {
       to: transaction.to,
       data: transaction.data,
@@ -107,7 +98,6 @@ export const sendTransaction = async (
 
     console.log("Building user operation...")
 
-    // Build user operation
     const userOp = await smartAccount.buildUserOp([tx])
 
     console.log("User operation built:", {
@@ -118,12 +108,10 @@ export const sendTransaction = async (
 
     console.log("Sending user operation...")
 
-    // Send user operation
     const userOpResponse = await smartAccount.sendUserOp(userOp)
 
     console.log("User operation sent, waiting for confirmation...")
 
-    // Wait for transaction to be mined
     const transactionDetails = await userOpResponse.wait()
 
     console.log("Transaction confirmed:", {
@@ -133,11 +121,9 @@ export const sendTransaction = async (
 
     return transactionDetails.receipt.transactionHash
   } catch (error: any) {
-    // Log the error comprehensively
     console.error("=== TRANSACTION FAILED ===")
     console.error("Error object:", error)
 
-    // Try to stringify with error handling for circular references
     try {
       console.error("Error stringified:", JSON.stringify(error, null, 2))
     } catch (e) {
@@ -147,7 +133,6 @@ export const sendTransaction = async (
     console.error("Error keys:", Object.keys(error || {}))
     console.error("Error toString:", error?.toString())
 
-    // Log specific properties
     console.error("Error properties:", {
       message: error?.message,
       code: error?.code,
@@ -156,7 +141,6 @@ export const sendTransaction = async (
       name: error?.name,
     })
 
-    // Deep dive into the 'data' property
     if (error?.data) {
       console.error("=== ERROR DATA DETAILS ===")
       console.error("Data type:", typeof error.data)
@@ -168,7 +152,6 @@ export const sendTransaction = async (
         console.error("Data stringification failed")
       }
 
-      // Check for nested error information
       if (error.data.cause) {
         console.error("Data cause:", error.data.cause)
       }
@@ -180,7 +163,6 @@ export const sendTransaction = async (
     console.error("Transaction that failed:", transaction)
     console.error("=========================")
 
-    // Extract the most meaningful error message
     let errorMessage = "Transaction failed - unknown error"
 
     if (error?.data?.cause?.message) {
@@ -193,7 +175,6 @@ export const sendTransaction = async (
       errorMessage = error.reason
     }
 
-    // Create enhanced error with all context
     const enhancedError = new Error(errorMessage) as any
     enhancedError.originalError = error
     enhancedError.transaction = transaction
@@ -209,11 +190,27 @@ export const getBalance = async (
   address: Address
 ): Promise<bigint> => {
   try {
-    const balance = await provider.request({
-      method: "eth_getBalance",
-      params: [address, "latest"],
+    console.log("getBalance called for address:", address)
+
+    const rpcUrl =
+      process.env.NEXT_PUBLIC_RPC_URL ||
+      "https://data-seed-prebsc-1-s1.binance.org:8545/"
+    console.log("Using RPC URL:", rpcUrl)
+
+    const directProvider = new ethers.JsonRpcProvider(rpcUrl)
+
+    // Verify network
+    const network = await directProvider.getNetwork()
+    console.log("Network:", {
+      chainId: network.chainId.toString(),
+      name: network.name,
     })
-    return BigInt(balance as string)
+
+    const balance = await directProvider.getBalance(address)
+    console.log("Balance from ethers:", balance.toString())
+    console.log("Balance in BNB:", ethers.formatEther(balance))
+
+    return balance
   } catch (error) {
     console.error("Failed to get balance:", error)
     return BigInt(0)

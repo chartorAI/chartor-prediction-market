@@ -21,13 +21,26 @@ export function useBalance() {
 
     const fetchBalance = async () => {
       try {
+        console.log("=== FETCHING BALANCE ===")
+        console.log("Address:", userAddress)
+        console.log("Provider exists:", !!web3AuthProvider)
+
         const newBalance = await getBalance(
           web3AuthProvider,
           userAddress as Address
         )
+
+        console.log("Balance fetched successfully:", newBalance.toString())
+        console.log("Balance in BNB:", Number(newBalance) / 1e18)
         setBalance(newBalance)
       } catch (error) {
-        console.error("Failed to fetch balance:", error)
+        console.error("=== BALANCE FETCH FAILED ===")
+        console.error("Error:", error)
+        console.error("Error details:", {
+          message: (error as any)?.message,
+          code: (error as any)?.code,
+          data: (error as any)?.data,
+        })
       }
     }
 
