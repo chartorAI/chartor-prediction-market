@@ -42,12 +42,7 @@ export function Navbar({ className }: NavbarProps) {
             href="/"
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent-blue flex items-center justify-center">
-              <span className="text-white font-bold text-sm">PM</span>
-            </div>
-            <span className="text-xl font-bold text-white hidden sm:block">
-              Prediction Market
-            </span>
+            <img src="/trianglelogo.svg" alt="Logo" className="h-8 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
