@@ -3,10 +3,8 @@
 import Link from "next/link"
 import { CountdownTimer } from "@/components/common/CountdownTimer"
 import { TradingButtons } from "@/components/trading/TradingButtons"
-import {
-  calculateMarketPrices,
-  calculateMarketVolume,
-} from "@/lib/utils/marketPrices"
+import { calculateMarketVolume } from "@/lib/utils/marketPrices"
+import { useMarketDetails } from "@/lib/hooks/useMarketDetails"
 import type { Market } from "@/types"
 
 interface MarketCardProps {
@@ -22,10 +20,16 @@ export function MarketCard({
   linkTo,
   className = "",
 }: MarketCardProps) {
+  // Fetch prices from contract
+  const { details } = useMarketDetails(market)
+
   // Computed values
-  const { yesPricePercent, noPricePercent } = calculateMarketPrices(market)
   const totalVolume = calculateMarketVolume(market)
   const assetName = market.type === "PRICE" ? market.asset : "BNB/USDT"
+
+  // Calculate price percentages from contract data
+  const yesPricePercent = details ? (Number(details.yesPrice) / 1e18) * 100 : 50
+  const noPricePercent = details ? (Number(details.noPrice) / 1e18) * 100 : 50
 
   // Render helpers
   const renderTargetInfo = () => {
