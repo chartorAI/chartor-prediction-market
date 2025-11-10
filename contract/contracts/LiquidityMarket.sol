@@ -706,6 +706,30 @@ contract LiquidityMarket is Ownable {
         return resolvedMarkets;
     }
 
+    /**
+     * @dev Get all expired markets that are ready for resolution
+     * Returns markets where deadline has passed but not yet resolved
+     * @return expiredMarkets Array of expired market IDs ready to resolve
+     */
+    function getExpiredUnresolvedMarkets() external view returns (uint256[] memory expiredMarkets) {
+        uint256[] memory tempMarkets = new uint256[](marketCounter);
+        uint256 expiredCount = 0;
+
+        for (uint256 i = 0; i < marketCounter; i++) {
+            if (markets[i].exists && !resolved[i] && block.timestamp >= markets[i].deadline) {
+                tempMarkets[expiredCount] = i;
+                expiredCount++;
+            }
+        }
+
+        expiredMarkets = new uint256[](expiredCount);
+        for (uint256 i = 0; i < expiredCount; i++) {
+            expiredMarkets[i] = tempMarkets[i];
+        }
+
+        return expiredMarkets;
+    }
+
     // ============ Fund Management Functions ============
 
     /**
