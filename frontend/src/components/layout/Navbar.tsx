@@ -3,13 +3,11 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Plus, Wallet, Copy, Check } from "lucide-react"
+import { Menu, X, Wallet, Copy, Check } from "lucide-react"
 import { useAuth } from "@/lib/web3/AuthProvider"
 import { useAuthStore } from "@/stores/authStore"
 import { useBalance } from "@/lib/hooks/useBalance"
 import { Button } from "@/components/ui/button"
-import { CreateMarketModal } from "@/components/markets/CreateMarketModal"
-import { useCreateMarket } from "@/lib/hooks/useCreateMarket"
 import { truncateAddress, formatBigInt } from "@/lib/utils/format"
 import { cn } from "@/lib/utils/cn"
 import { toast } from "react-hot-toast"
@@ -20,13 +18,11 @@ interface NavbarProps {
 
 export function Navbar({ className }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [createMarketModalOpen, setCreateMarketModalOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const pathname = usePathname()
   const { login, logout } = useAuth()
   const { isAuthenticated, userAddress, isLoading } = useAuthStore()
   const { balance, isLoading: balanceLoading } = useBalance()
-  const { createMarket, isCreating } = useCreateMarket()
 
   const navItems = [
     { label: "Home", href: "/" },
@@ -130,19 +126,6 @@ export function Navbar({ className }: NavbarProps) {
               )}
             </nav>
 
-            {/* Create Market Button */}
-            {isAuthenticated && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCreateMarketModalOpen(true)}
-                className="border-primary/50 hover:border-primary hover:bg-primary/10"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Market
-              </Button>
-            )}
-
             {/* Auth Section */}
             {isAuthenticated ? (
               <div className="flex items-center gap-3">
@@ -243,21 +226,6 @@ export function Navbar({ className }: NavbarProps) {
               )}
             </nav>
 
-            {/* Create Market Button */}
-            {isAuthenticated && (
-              <Button
-                variant="outline"
-                className="w-full border-primary/50 hover:border-primary hover:bg-primary/10"
-                onClick={() => {
-                  setMobileMenuOpen(false)
-                  setCreateMarketModalOpen(true)
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Market
-              </Button>
-            )}
-
             {/* Auth Section */}
             <div className="pt-4 border-t border-white/10 space-y-3">
               {isAuthenticated ? (
@@ -313,19 +281,6 @@ export function Navbar({ className }: NavbarProps) {
           </div>
         </div>
       )}
-
-      {/* Create Market Modal */}
-      <CreateMarketModal
-        isOpen={createMarketModalOpen}
-        onClose={() => setCreateMarketModalOpen(false)}
-        onSubmit={async (data) => {
-          const result = await createMarket(data)
-          if (result.success) {
-            setCreateMarketModalOpen(false)
-          }
-        }}
-        isSubmitting={isCreating}
-      />
     </nav>
   )
 }

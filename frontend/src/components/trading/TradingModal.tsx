@@ -23,6 +23,7 @@ import {
 } from "@/lib/contracts"
 import { formatBigInt } from "@/lib/utils/format"
 import type { Market } from "@/types"
+import { TrendingUp, TrendingDown, Info, Zap, ArrowRight } from "lucide-react"
 
 // Validation schema for share amount
 const shareAmountSchema = z
@@ -41,36 +42,10 @@ const shareAmountSchema = z
     message: "Share amount is too large",
   })
 
-/**
- * TradingModal Component
- *
- * A modal dialog for executing trades on prediction markets.
- * Features:
- * - Real-time cost calculation using LMSR pricing from smart contract
- * - Input validation with Zod
- * - Gas fee estimation
- * - Animated transitions with Framer Motion
- * - Glassmorphism design
- * - Transaction execution through Biconomy Smart Account
- *
- * @example
- * ```tsx
- * <TradingModal
- *   isOpen={isModalOpen}
- *   onClose={() => setIsModalOpen(false)}
- *   market={selectedMarket}
- *   isYes={true}
- * />
- * ```
- */
 interface TradingModalProps {
-  /** Whether the modal is open */
   isOpen: boolean
-  /** Callback when modal should close */
   onClose: () => void
-  /** The market to trade on */
   market: Market
-  /** Whether trading YES (true) or NO (false) shares */
   isYes: boolean
 }
 
@@ -84,17 +59,15 @@ export function TradingModal({
   const [error, setError] = useState<string | null>(null)
 
   const { executeTrade, isExecuting } = useTrade()
-  const chainId = 97 // BNB Testnet
+  const chainId = 97
   const addresses = getContractAddresses(chainId)
 
-  // Determine contract details based on market type
   const isPriceMarket = market.type === "PRICE"
   const contractAddress = isPriceMarket
     ? addresses.predictionMarket
     : addresses.liquidityMarket
   const abi = isPriceMarket ? PREDICTION_MARKET_ABI : LIQUIDITY_MARKET_ABI
 
-  // Parse share amount to BigInt (with 18 decimals)
   const shareAmountBigInt = useMemo(() => {
     try {
       if (!shareAmount || shareAmount === "") return BigInt(0)
@@ -113,14 +86,12 @@ export function TradingModal({
     functionName: isYes ? "calculateYesCost" : "calculateNoCost",
     args: [BigInt(market.id), shareAmountBigInt],
     enabled: shareAmountBigInt > BigInt(0),
-    watch: true,
-    watchInterval: 2000,
+    watch: false, // Disabled auto-refresh for better UX
   })
 
   // Estimate gas fee (approximate)
   const estimatedGasFee = useMemo(() => {
-    // Rough estimate: 200,000 gas * 3 gwei = 0.0006 BNB
-    return BigInt(600000000000000) // 0.0006 BNB in wei
+    return BigInt(600000000000000)
   }, [])
 
   // Calculate total cost
@@ -144,7 +115,6 @@ export function TradingModal({
     }
   }, [shareAmount])
 
-  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
       setShareAmount("")
@@ -170,7 +140,6 @@ export function TradingModal({
       return
     }
 
-    // Execute trade using the useTrade hook
     const tradeResult = await executeTrade({
       market,
       shares: shareAmountBigInt,
@@ -178,7 +147,6 @@ export function TradingModal({
       cost: totalCost,
     })
 
-    // Close modal on success
     if (tradeResult.success) {
       onClose()
     }
@@ -190,107 +158,130 @@ export function TradingModal({
     }
   }
 
-  // Get current prices for display
-  const yesPrice = market.qYes > BigInt(0) ? Number(market.qYes) / 1e18 : 0
-  const noPrice = market.qNo > BigInt(0) ? Number(market.qNo) / 1e18 : 0
-  const yesPricePercent = yesPrice * 100
-  const noPricePercent = noPrice * 100
+  // Quick amount presets
+  const quickAmounts = [1, 5, 10, 25, 50]
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <AnimatePresence mode="wait">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden p-0 gap-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-slate-800/50 flex flex-col">
+        {/* Header */}
+        <div className="relative overflow-hidden px-6 pt-6 pb-4 bg-gradient-to-br from-primary/15 via-purple-600/15 to-transparent border-b border-white/10">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-full blur-3xl opacity-60" />
+
+          <DialogHeader className="relative space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div
+                className={`p-2 rounded-lg shadow-lg ${
+                  isYes
+                    ? "bg-gradient-to-br from-emerald-500 to-green-600"
+                    : "bg-gradient-to-br from-rose-500 to-red-600"
+                }`}
+              >
+                {isYes ? (
+                  <TrendingUp className="w-4 h-4 text-white" />
+                ) : (
+                  <TrendingDown className="w-4 h-4 text-white" />
+                )}
+              </div>
+              <DialogTitle className="text-2xl font-bold text-white">
                 Buy {isYes ? "YES" : "NO"} Shares
               </DialogTitle>
-              <DialogDescription className="text-white/60 text-sm mt-2">
-                {market.description}
-              </DialogDescription>
-            </DialogHeader>
+            </div>
+            <DialogDescription className="text-sm text-white/60 line-clamp-2">
+              {market.description}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-            <div className="space-y-5 py-4">
-              {/* Market Details */}
-              <div className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6">
-                    <div className="text-center">
-                      <div className="text-white/50 text-xs mb-1">YES</div>
-                      <div className="text-success font-bold text-lg">
-                        {yesPricePercent.toFixed(1)}%
-                      </div>
-                    </div>
-                    <div className="w-px h-10 bg-white/10"></div>
-                    <div className="text-center">
-                      <div className="text-white/50 text-xs mb-1">NO</div>
-                      <div className="text-error font-bold text-lg">
-                        {noPricePercent.toFixed(1)}%
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-white/40 text-xs">
-                      Market #{market.id}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Share Amount Input */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="shareAmount"
-                  className="text-sm font-semibold text-white"
-                >
-                  Number of Shares
-                </label>
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto flex-1 px-6 py-5">
+          <div className="space-y-5">
+            {/* Share Amount Input */}
+            <div className="space-y-2.5">
+              <label
+                htmlFor="shareAmount"
+                className="text-xs font-bold text-white/90 uppercase tracking-wide"
+              >
+                Number of Shares
+              </label>
+              <div className="relative">
                 <Input
                   id="shareAmount"
                   type="number"
-                  placeholder="Enter amount (e.g., 1, 2, 3...)"
+                  placeholder="Enter amount"
                   value={shareAmount}
                   onChange={(e) => {
-                    // Only allow integers
                     const value = e.target.value
                     if (value === "" || /^\d+$/.test(value)) {
                       setShareAmount(value)
                     }
                   }}
                   disabled={isExecuting}
-                  className="text-lg h-12 bg-white/5 border-white/10 focus:border-primary/50 text-white"
+                  className="h-12 text-lg bg-slate-900/50 border-white/10 focus:border-primary/50 text-white font-semibold rounded-lg pr-20"
                   min="1"
                   step="1"
                   pattern="[0-9]*"
                 />
-                {error && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-error text-sm font-medium"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <p className="text-xs text-white/50">
-                  Whole numbers only (1, 2, 3, etc.)
-                </p>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 text-sm font-medium">
+                  shares
+                </div>
               </div>
 
-              {/* Cost Breakdown */}
-              {shareAmountBigInt > BigInt(0) && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-3 p-4 rounded-xl bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10"
+              {/* Quick Amount Buttons */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs text-white/40 font-medium mr-1">
+                  Quick:
+                </span>
+                {quickAmounts.map((amount) => (
+                  <button
+                    key={amount}
+                    type="button"
+                    onClick={() => setShareAmount(amount.toString())}
+                    disabled={isExecuting}
+                    className={`px-2.5 py-1 text-xs font-bold rounded transition-all ${
+                      shareAmount === amount.toString()
+                        ? "bg-primary text-white border border-primary"
+                        : "bg-slate-800/50 text-white/60 border border-white/10 hover:border-primary/50 hover:text-white"
+                    }`}
+                  >
+                    {amount}
+                  </button>
+                ))}
+              </div>
+
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-red-400 text-xs flex items-center gap-1.5 bg-red-500/10 px-3 py-2 rounded-lg border border-red-500/20"
                 >
-                  <div className="flex justify-between text-sm">
+                  <span className="w-1 h-1 bg-red-400 rounded-full" />
+                  {error}
+                </motion.p>
+              )}
+
+              <div className="flex items-center gap-2 text-xs text-white/50">
+                <Info className="w-3 h-3" />
+                <span>Whole numbers only (1, 2, 3, etc.)</span>
+              </div>
+            </div>
+
+            {/* Cost Breakdown */}
+            {shareAmountBigInt > BigInt(0) && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-3 p-4 rounded-xl bg-gradient-to-br from-primary/10 to-purple-600/10 border border-primary/20"
+              >
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Zap className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-bold text-primary uppercase tracking-wide">
+                    Cost Breakdown
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  <div className="flex justify-between items-center text-sm">
                     <span className="text-white/60">Share Cost</span>
                     <span className="text-white font-semibold">
                       {isLoadingCost ? (
@@ -302,63 +293,104 @@ export function TradingModal({
                       )}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
+
+                  <div className="flex justify-between items-center text-sm">
                     <span className="text-white/60">Est. Gas Fee</span>
                     <span className="text-white font-semibold">
                       {formatBigInt(estimatedGasFee, 18, 4)} BNB
                     </span>
                   </div>
-                  <div className="h-px bg-white/10" />
+
+                  <div className="h-px bg-white/20 my-2" />
+
                   <div className="flex justify-between items-center">
-                    <span className="text-white font-bold">Total Cost</span>
-                    <span className="text-primary font-bold text-xl">
+                    <span className="text-white font-bold text-sm">
+                      Total Cost
+                    </span>
+                    <div className="text-right">
                       {isLoadingCost ? (
                         <LoadingSpinner size="sm" />
                       ) : (
-                        `${formatBigInt(totalCost, 18, 4)} BNB`
+                        <div className="text-primary font-bold text-lg">
+                          {formatBigInt(totalCost, 18, 4)} BNB
+                        </div>
                       )}
-                    </span>
+                    </div>
                   </div>
-                </motion.div>
-              )}
-            </div>
+                </div>
 
-            <DialogFooter className="flex-col sm:flex-row gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isExecuting}
-                className="w-full sm:w-auto bg-white/5 hover:bg-white/10 border-white/10 text-white"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleConfirm}
-                disabled={
-                  isExecuting ||
-                  !shareAmount ||
-                  !!error ||
-                  shareAmountBigInt <= BigInt(0) ||
-                  isLoadingCost
-                }
-                className={`w-full sm:w-auto min-w-[140px] font-bold ${
-                  isYes
-                    ? "bg-gradient-to-br from-success/80 to-success hover:from-success hover:to-success/80"
-                    : "bg-gradient-to-br from-error/80 to-error hover:from-error hover:to-error/80"
-                } text-white shadow-lg`}
-              >
-                {isExecuting ? (
-                  <div className="flex items-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    <span>Processing...</span>
+                {/* Expected Return Info */}
+                {costData && shareAmount && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <div className="flex items-start gap-2 text-xs text-white/70">
+                      <Info className="w-3.5 h-3.5 text-white/50 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="leading-relaxed">
+                          If outcome is correct, you'll receive{" "}
+                          <span className="text-white font-semibold">
+                            {shareAmount} BNB
+                          </span>
+                        </p>
+                        <p className="text-white/50 mt-1">
+                          Potential profit:{" "}
+                          <span className="text-emerald-400 font-semibold">
+                            ~
+                            {(
+                              parseFloat(shareAmount) -
+                              parseFloat(formatBigInt(totalCost, 18, 4))
+                            ).toFixed(4)}{" "}
+                            BNB
+                          </span>
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  `Buy ${isYes ? "YES" : "NO"} Shares`
                 )}
-              </Button>
-            </DialogFooter>
-          </motion.div>
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 bg-slate-900/50 border-t border-white/10 flex-shrink-0">
+          <div className="flex gap-2.5">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isExecuting}
+              className="flex-1 h-11 bg-slate-800/50 hover:bg-slate-800 border-slate-700 text-white font-semibold rounded-lg"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              disabled={
+                isExecuting ||
+                !shareAmount ||
+                !!error ||
+                shareAmountBigInt <= BigInt(0) ||
+                isLoadingCost
+              }
+              className={`flex-[2] h-11 font-bold rounded-lg shadow-lg transition-all ${
+                isYes
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-emerald-500/30"
+                  : "bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 shadow-rose-500/30"
+              } text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {isExecuting ? (
+                <div className="flex items-center justify-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  <span>Processing...</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-1.5">
+                  <span>Buy {isYes ? "YES" : "NO"}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </div>
+              )}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )

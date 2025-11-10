@@ -1,15 +1,24 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
+import { Plus } from "lucide-react"
 import { useMarkets } from "@/lib/hooks/useMarkets"
+import { useAuthStore } from "@/stores/authStore"
+import { useCreateMarket } from "@/lib/hooks/useCreateMarket"
 import { LoadingSpinner } from "@/components/common/LoadingSpinner"
 import { AssetTabs } from "@/components/markets/AssetTabs"
 import { MarketCard } from "@/components/markets/MarketCard"
+import { CreateMarketModal } from "@/components/markets/CreateMarketModal"
+import { Button } from "@/components/ui/button"
 import { ASSETS } from "@/lib/constants"
 import type { Asset } from "@/types"
 
 export default function PriceMarketsPage() {
+  const [createMarketModalOpen, setCreateMarketModalOpen] = useState(false)
   const { allMarkets, isLoading } = useMarkets()
+  const { isAuthenticated } = useAuthStore()
+  const { createMarket, isCreating } = useCreateMarket()
 
   // Filter for price markets only
   const priceMarkets = allMarkets.filter(
@@ -30,14 +39,27 @@ export default function PriceMarketsPage() {
     <div className="min-h-screen bg-background-primary">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Price Prediction Markets
-          </h1>
-          <p className="text-lg text-white/60 max-w-2xl mx-auto">
-            Predict future prices of BTC, ETH, BNB, GOLD, and OIL using
-            real-time Pyth oracle data
-          </p>
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                Price Prediction Markets
+              </h1>
+              <p className="text-lg text-white/60 max-w-2xl">
+                Predict future prices of BTC, ETH, BNB, GOLD, and OIL using
+                real-time Pyth oracle data
+              </p>
+            </div>
+            {isAuthenticated && (
+              <Button
+                onClick={() => setCreateMarketModalOpen(true)}
+                className="bg-gradient-to-br from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Market
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Asset Tabs */}
@@ -104,6 +126,19 @@ export default function PriceMarketsPage() {
           </div>
         )}
       </div>
+
+      {/* Create Market Modal */}
+      <CreateMarketModal
+        isOpen={createMarketModalOpen}
+        onClose={() => setCreateMarketModalOpen(false)}
+        onSubmit={async (data) => {
+          const result = await createMarket(data)
+          if (result.success) {
+            setCreateMarketModalOpen(false)
+          }
+        }}
+        isSubmitting={isCreating}
+      />
     </div>
   )
 }
