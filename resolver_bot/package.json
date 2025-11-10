@@ -1,0 +1,22 @@
+{
+  "name": "prediction-market-resolver-bot",
+  "version": "1.0.0",
+  "description": "Automated bot for resolving expired prediction markets",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node src/test.js"
+  },
+  "keywords": [
+    "prediction-market",
+    "resolver",
+    "bot",
+    "ethereum"
+  ],
+  "dependencies": {
+    "ethers": "^6.9.0",
+    "dotenv": "^16.3.1"
+  }
+}
