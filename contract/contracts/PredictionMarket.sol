@@ -21,8 +21,6 @@ contract PredictionMarket is Ownable {
     uint256 public constant MAX_PRICE_AGE = 300;
     uint256 public constant PLATFORM_FEE_RATE = 150; // 1.5% = 150 basis points
 
-    mapping(string => bytes32) public pythFeeds;
-
     // ============ State Variables ============
 
     struct MarketConfig {
@@ -171,9 +169,7 @@ contract PredictionMarket is Ownable {
 
     // ============ Constructor ============
 
-    constructor() Ownable(msg.sender) {
-        _initializePythFeeds();
-    }
+    constructor() Ownable(msg.sender) {}
 
     // ============ Market Management Functions ============
 
@@ -211,7 +207,7 @@ contract PredictionMarket is Ownable {
             revert InvalidTargetPrice();
         }
 
-        if (!isFeedSupported(_pythFeedId)) {
+        if (_pythFeedId == bytes32(0)) {
             revert InvalidFeedId();
         }
 
@@ -480,23 +476,6 @@ contract PredictionMarket is Ownable {
 
     // ============ Oracle Integration Functions ============
 
-    function _initializePythFeeds() internal {
-        // BTC/USD
-        pythFeeds["BTC"] = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
-
-        // ETH/USD
-        pythFeeds["ETH"] = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
-
-        // BNB/USD
-        pythFeeds["BNB"] = 0x2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f;
-
-        // XAU/USD (Gold)
-        pythFeeds["GOLD"] = 0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2;
-
-        // WTI Crude Oil USD feed ID
-        pythFeeds["OIL"] = 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b;
-    }
-
     /**
      * @dev Get current price from Pyth oracle for a market's feed ID
      * @param marketId The market ID
@@ -507,19 +486,6 @@ contract PredictionMarket is Ownable {
         uint256 marketId
     ) external view marketExists(marketId) returns (uint256 price, uint256 timestamp) {
         return _fetchPriceFromPyth(markets[marketId].pythFeedId);
-    }
-
-    /**
-     * @dev Get supported feed ID for an asset symbol
-     * @param symbol Asset symbol (e.g., "BTC", "ETH", "BNB", "GOLD", "OIL")
-     * @return feedId Pyth feed ID for the asset
-     */
-    function getFeedId(string memory symbol) external view returns (bytes32 feedId) {
-        bytes32 id = pythFeeds[symbol];
-        if (id == bytes32(0)) {
-            revert InvalidFeedId();
-        }
-        return id;
     }
 
     /**
@@ -554,19 +520,6 @@ contract PredictionMarket is Ownable {
         } catch {
             revert OracleError();
         }
-    }
-
-    /**
-     * @dev Check if a feed ID is supported
-     * @param feedId Pyth feed ID to check
-     * @return supported True if feed ID is supported
-     */
-    function isFeedSupported(bytes32 feedId) public view returns (bool supported) {
-        return (feedId == pythFeeds["BTC"] ||
-            feedId == pythFeeds["ETH"] ||
-            feedId == pythFeeds["BNB"] ||
-            feedId == pythFeeds["GOLD"] ||
-            feedId == pythFeeds["OIL"]);
     }
 
     // ============ Market Resolution Functions ============
