@@ -1,21 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import Link from "next/link"
 import { Plus } from "lucide-react"
 import { useMarkets } from "@/lib/hooks/useMarkets"
 import { useAuthStore } from "@/stores/authStore"
-import { useCreateMarket } from "@/lib/hooks/useCreateMarket"
 import { LoadingSpinner } from "@/components/common/LoadingSpinner"
 import { TradingViewChart } from "@/components/charts/TradingViewChart"
 import { MarketCard } from "@/components/markets/MarketCard"
-import { CreateMarketModal } from "@/components/markets/CreateMarketModal"
 import { Button } from "@/components/ui/button"
 
 export default function LiquidityMarketsPage() {
-  const [createMarketModalOpen, setCreateMarketModalOpen] = useState(false)
   const { allMarkets, isLoading } = useMarkets()
   const { isAuthenticated } = useAuthStore()
-  const { createMarket, isCreating } = useCreateMarket()
 
   // Filter for liquidity markets only
   const liquidityMarkets = allMarkets.filter(
@@ -43,13 +39,12 @@ export default function LiquidityMarketsPage() {
               </p>
             </div>
             {isAuthenticated && (
-              <Button
-                onClick={() => setCreateMarketModalOpen(true)}
-                className="bg-gradient-to-br from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Market
-              </Button>
+              <Link href="/markets/create">
+                <Button className="bg-gradient-to-br from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Market
+                </Button>
+              </Link>
             )}
           </div>
         </div>
@@ -105,19 +100,6 @@ export default function LiquidityMarketsPage() {
           )}
         </div>
       </div>
-
-      {/* Create Market Modal */}
-      <CreateMarketModal
-        isOpen={createMarketModalOpen}
-        onClose={() => setCreateMarketModalOpen(false)}
-        onSubmit={async (data) => {
-          const result = await createMarket(data)
-          if (result.success) {
-            setCreateMarketModalOpen(false)
-          }
-        }}
-        isSubmitting={isCreating}
-      />
     </div>
   )
 }

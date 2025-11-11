@@ -1,7 +1,8 @@
 // Core types for the application
+import { ASSETS, MARKET_TYPES } from "@/lib/constants"
 
-export type Asset = "BTC" | "ETH" | "BNB" | "GOLD" | "OIL"
-export type MarketType = "PRICE" | "LIQUIDITY"
+export type Asset = (typeof ASSETS)[number]
+export type MarketType = (typeof MARKET_TYPES)[number]
 
 export interface PriceMarket {
   id: string

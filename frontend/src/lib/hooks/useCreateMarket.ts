@@ -8,7 +8,7 @@ import {
   getContractAddresses,
 } from "@/lib/contracts"
 import { getPythFeedId } from "@/lib/constants/pythFeeds"
-import type { MarketFormData } from "@/components/markets/CreateMarketModal"
+import type { MarketFormData } from "@/components/markets"
 
 interface CreateMarketResult {
   success: boolean

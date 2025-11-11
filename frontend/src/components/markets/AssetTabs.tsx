@@ -1,7 +1,6 @@
 "use client"
 
-import { Asset } from "@/types"
-import { ASSETS, TRADINGVIEW_SYMBOLS } from "@/lib/constants"
+import { ASSETS } from "@/lib/constants"
 import { useMarketStore } from "@/stores/marketStore"
 
 interface AssetTabsProps {

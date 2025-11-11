@@ -8,9 +8,8 @@ import {
   LIQUIDITY_MARKET_ABI,
   getContractAddresses,
   getAssetFromFeedId,
-  type Asset,
 } from "@/lib/contracts"
-import type { Market, PriceMarket, LiquidityMarket } from "@/types"
+import type { Market, PriceMarket, LiquidityMarket, Asset } from "@/types"
 
 const POLLING_INTERVAL = 10000 // 10 seconds
 
@@ -150,7 +149,15 @@ export function useMarkets() {
             qNoResult?.status === "success" &&
             resolvedResult?.status === "success"
           ) {
-            const config = configResult.result
+            const config = configResult.result as {
+              pythFeedId: `0x${string}`
+              targetPrice: bigint
+              deadline: bigint
+              liquidityParam: bigint
+              description: string
+              creator: `0x${string}`
+              exists: boolean
+            }
             const asset = getAssetFromFeedId(config.pythFeedId)
 
             if (asset && config.exists) {
@@ -158,7 +165,7 @@ export function useMarkets() {
                 id: id.toString(),
                 type: "PRICE",
                 pythFeedId: config.pythFeedId,
-                asset,
+                asset: asset as Asset,
                 targetPrice: config.targetPrice,
                 deadline: Number(config.deadline),
                 liquidityParam: config.liquidityParam,
@@ -191,7 +198,14 @@ export function useMarkets() {
             qNoResult?.status === "success" &&
             resolvedResult?.status === "success"
           ) {
-            const config = configResult.result
+            const config = configResult.result as {
+              targetLiquidity: bigint
+              deadline: bigint
+              liquidityParam: bigint
+              description: string
+              creator: `0x${string}`
+              exists: boolean
+            }
 
             if (config.exists) {
               const market: LiquidityMarket = {
