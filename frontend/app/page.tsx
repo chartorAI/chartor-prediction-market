@@ -119,45 +119,30 @@ export default function Home() {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              <motion.div
-                className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
+              <div className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300">
                 <div className="text-3xl font-bold text-white mb-1">
                   {activeMarkets.length}
                 </div>
                 <div className="text-white/60 text-sm font-medium">
                   Active Markets
                 </div>
-              </motion.div>
-              <motion.div
-                className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
+              </div>
+              <div className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300">
                 <div className="text-3xl font-bold text-white mb-1">
                   {(Number(totalVolume) / 1e18).toFixed(2)}
                 </div>
                 <div className="text-white/60 text-sm font-medium">
                   Total Volume (BNB)
                 </div>
-              </motion.div>
-              <motion.div
-                className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
+              </div>
+              <div className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300">
                 <div className="text-3xl font-bold text-white mb-1">
                   {priceMarkets.length + liquidityMarkets.length}
                 </div>
                 <div className="text-white/60 text-sm font-medium">
                   Total Predictions
                 </div>
-              </motion.div>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -270,13 +255,9 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
-              <motion.div
+              <div
                 key={index}
                 className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl rounded-2xl p-5 shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
               >
                 <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center mb-3 shadow-lg">
                   <feature.icon className="w-5 h-5 text-white" />
@@ -287,7 +268,7 @@ export default function Home() {
                 <p className="text-white/60 text-sm leading-relaxed">
                   {feature.description}
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -320,25 +301,18 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentMarkets.map((market, index) => (
-                <motion.div
-                  key={market.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <MarketCard
-                    market={market}
-                    showTradingButtons={false}
-                    linkTo={
-                      market.type === "PRICE"
-                        ? `/markets/price/${market.asset.toLowerCase()}`
-                        : "/markets/liquidity"
-                    }
-                    className="cursor-pointer group"
-                  />
-                </motion.div>
+              {recentMarkets.map((market) => (
+                <MarketCard
+                  key={`${market.type}-${market.id}`}
+                  market={market}
+                  showTradingButtons={false}
+                  linkTo={
+                    market.type === "PRICE"
+                      ? `/markets/price`
+                      : "/markets/liquidity"
+                  }
+                  className="cursor-pointer group"
+                />
               ))}
             </div>
           )}
