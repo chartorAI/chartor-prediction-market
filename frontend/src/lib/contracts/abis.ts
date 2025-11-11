@@ -199,13 +199,7 @@ export const PREDICTION_MARKET_ABI = [
     stateMutability: "view",
     type: "function",
   },
-  {
-    inputs: [{ internalType: "string", name: "symbol", type: "string" }],
-    name: "getFeedId",
-    outputs: [{ internalType: "bytes32", name: "feedId", type: "bytes32" }],
-    stateMutability: "view",
-    type: "function",
-  },
+
   // Write Functions
   {
     inputs: [

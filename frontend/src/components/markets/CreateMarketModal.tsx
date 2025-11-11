@@ -17,6 +17,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LoadingSpinner } from "@/components/common/LoadingSpinner"
 import { ASSETS, type Asset } from "@/lib/constants"
 import {
+  getPythFeedId,
+  getPythFeedsByCategory,
+} from "@/lib/constants/pythFeeds"
+import {
   TrendingUp,
   Droplets,
   Calendar,
@@ -29,6 +33,7 @@ import {
 const priceMarketSchema = z.object({
   marketType: z.literal("PRICE"),
   asset: z.enum(ASSETS),
+  feedId: z.string().min(1, "Feed ID is required"), // Pyth feed ID
   targetPrice: z
     .string()
     .min(1, "Target price is required")
@@ -142,6 +147,7 @@ export function CreateMarketModal({
         ? {
             marketType,
             asset,
+            feedId: getPythFeedId(asset), // Include feed ID for validation
             targetPrice,
             deadline,
             liquidityParam,
@@ -175,6 +181,7 @@ export function CreateMarketModal({
         ? {
             marketType: "PRICE" as const,
             asset,
+            feedId: getPythFeedId(asset), // Automatically get Pyth feed ID
             targetPrice,
             deadline,
             liquidityParam,

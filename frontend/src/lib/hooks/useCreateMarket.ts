@@ -7,6 +7,7 @@ import {
   LIQUIDITY_MARKET_ABI,
   getContractAddresses,
 } from "@/lib/contracts"
+import { getPythFeedId } from "@/lib/constants/pythFeeds"
 import type { MarketFormData } from "@/components/markets/CreateMarketModal"
 
 interface CreateMarketResult {
@@ -20,15 +21,6 @@ interface UseCreateMarketReturn {
   createMarket: (data: MarketFormData) => Promise<CreateMarketResult>
   isCreating: boolean
   error: string | null
-}
-
-// Pyth feed IDs for different assets (from PredictionMarket.sol)
-const PYTH_FEED_IDS: Record<string, `0x${string}`> = {
-  BTC: "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
-  ETH: "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
-  BNB: "0x2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f",
-  GOLD: "0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2",
-  OIL: "0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b",
 }
 
 /**
@@ -87,8 +79,8 @@ export const useCreateMarket = (): UseCreateMarketReturn => {
         let marketId: string | undefined
 
         if (data.marketType === "PRICE") {
-          // Get Pyth feed ID for the asset
-          const pythFeedId = PYTH_FEED_IDS[data.asset]
+          // Get Pyth feed ID for the asset - now supports 20+ assets!
+          const pythFeedId = data.feedId || getPythFeedId(data.asset)
           if (!pythFeedId) {
             throw new Error(`Unsupported asset: ${data.asset}`)
           }

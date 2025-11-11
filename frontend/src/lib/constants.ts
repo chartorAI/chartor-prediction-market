@@ -8,8 +8,31 @@ export const CHAIN_NAME = "BNB Smart Chain Testnet"
 export const RPC_URL = "https://data-seed-prebsc-1-s1.binance.org:8545/"
 export const BLOCK_EXPLORER = "https://testnet.bscscan.com"
 
-// Assets
-export const ASSETS = ["BTC", "ETH", "BNB", "GOLD", "OIL"] as const
+// Assets - Now supports all Pyth feeds
+// Import from pythFeeds for the complete list
+export const ASSETS = [
+  "BTC",
+  "ETH",
+  "BNB",
+  "SOL",
+  "MATIC",
+  "AVAX",
+  "DOGE",
+  "XRP",
+  "ADA",
+  "DOT",
+  "GOLD",
+  "SILVER",
+  "OIL",
+  "EUR",
+  "GBP",
+  "JPY",
+  "AAPL",
+  "TSLA",
+  "MSFT",
+  "GOOGL",
+  "AMZN",
+] as const
 export type Asset = (typeof ASSETS)[number]
 
 // Market types
@@ -25,10 +48,26 @@ export const MAX_WHALE_DISPLAY = 3
 export const ADDRESS_TRUNCATE_LENGTH = 6
 
 // TradingView symbols (exchange:symbol format)
-export const TRADINGVIEW_SYMBOLS: Record<Asset, string> = {
+export const TRADINGVIEW_SYMBOLS: Partial<Record<Asset, string>> = {
   BTC: "BINANCE:BTCUSDT",
   ETH: "BINANCE:ETHUSDT",
   BNB: "BINANCE:BNBUSDT",
+  SOL: "BINANCE:SOLUSDT",
+  MATIC: "BINANCE:MATICUSDT",
+  AVAX: "BINANCE:AVAXUSDT",
+  DOGE: "BINANCE:DOGEUSDT",
+  XRP: "BINANCE:XRPUSDT",
+  ADA: "BINANCE:ADAUSDT",
+  DOT: "BINANCE:DOTUSDT",
   GOLD: "OANDA:XAUUSD",
+  SILVER: "OANDA:XAGUSD",
   OIL: "TVC:USOIL",
+  EUR: "FX:EURUSD",
+  GBP: "FX:GBPUSD",
+  JPY: "FX:USDJPY",
+  AAPL: "NASDAQ:AAPL",
+  TSLA: "NASDAQ:TSLA",
+  MSFT: "NASDAQ:MSFT",
+  GOOGL: "NASDAQ:GOOGL",
+  AMZN: "NASDAQ:AMZN",
 }
