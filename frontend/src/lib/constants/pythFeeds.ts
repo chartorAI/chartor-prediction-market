@@ -47,8 +47,11 @@ export const PYTH_FEEDS: Record<string, PythFeed> = {}
   // Use display_symbol as the unique key (e.g., "BTC/USD", "EUR/USD")
   const key = feed.attributes.display_symbol
 
+  // Add 0x prefix to feed ID if not present (required by smart contracts)
+  const feedId = feed.id.startsWith("0x") ? feed.id : `0x${feed.id}`
+
   PYTH_FEEDS[key] = {
-    id: feed.id,
+    id: feedId,
     symbol: feed.attributes.display_symbol,
     name: feed.attributes.description.split(" / ")[0] || base,
     category,

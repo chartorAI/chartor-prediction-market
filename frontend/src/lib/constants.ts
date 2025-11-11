@@ -10,30 +10,18 @@ export const BLOCK_EXPLORER = "https://testnet.bscscan.com"
 
 // Assets - Now supports all Pyth feeds
 // Import from pythFeeds for the complete list
-export const ASSETS = [
-  "BTC",
-  "ETH",
-  "BNB",
-  "SOL",
-  "MATIC",
-  "AVAX",
-  "DOGE",
-  "XRP",
-  "ADA",
-  "DOT",
-  "GOLD",
-  "SILVER",
-  "OIL",
-  "EUR",
-  "GBP",
-  "JPY",
-  "AAPL",
-  "TSLA",
-  "MSFT",
-  "GOOGL",
-  "AMZN",
-] as const
-export type Asset = (typeof ASSETS)[number]
+import { getAssetSymbols, PYTH_FEEDS } from "./constants/pythFeeds"
+
+// Get all asset symbols (display symbols like "BTC/USD", "ETH/USD", etc.)
+export const ASSETS = getAssetSymbols()
+export type Asset = string
+
+// Re-export for convenience
+export { PYTH_FEEDS, getPythFeedId, getPythFeed } from "./constants/pythFeeds"
+export {
+  getTradingViewSymbol,
+  hasTradingViewChart,
+} from "./utils/tradingViewSymbols"
 
 // Market types
 export const MARKET_TYPES = ["PRICE", "LIQUIDITY"] as const

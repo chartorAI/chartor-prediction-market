@@ -8,7 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LoadingSpinner } from "@/components/common/LoadingSpinner"
 import { ASSETS, type Asset } from "@/lib/constants"
-import { getPythFeedId } from "@/lib/constants/pythFeeds"
+import {
+  getPythFeedId,
+  getPythFeedsByCategory,
+  type PythFeed,
+} from "@/lib/constants/pythFeeds"
 import {
   TrendingUp,
   Droplets,
@@ -23,7 +27,7 @@ import {
 // Validation schemas
 const priceMarketSchema = z.object({
   marketType: z.literal("PRICE"),
-  asset: z.enum(ASSETS),
+  asset: z.string().min(1, "Asset is required"),
   feedId: z.string().min(1, "Feed ID is required"),
   targetPrice: z
     .string()
@@ -111,7 +115,7 @@ export function CreateMarketForm({
   isSubmitting = false,
 }: CreateMarketFormProps) {
   const [marketType, setMarketType] = useState<"PRICE" | "LIQUIDITY">("PRICE")
-  const [asset, setAsset] = useState<Asset>("BTC")
+  const [asset, setAsset] = useState<Asset>(ASSETS[0] || "BTC/USD")
   const [targetPrice, setTargetPrice] = useState("")
   const [targetLiquidity, setTargetLiquidity] = useState("")
   const [deadline, setDeadline] = useState("")
@@ -120,6 +124,9 @@ export function CreateMarketForm({
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isAssetDropdownOpen, setIsAssetDropdownOpen] = useState(false)
   const [assetSearch, setAssetSearch] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<
+    PythFeed["category"] | "all"
+  >("all")
 
   const minDeadline = useMemo(() => {
     const date = new Date()
@@ -128,11 +135,50 @@ export function CreateMarketForm({
   }, [])
 
   const filteredAssets = useMemo(() => {
-    if (!assetSearch) return ASSETS
-    return ASSETS.filter((a) =>
-      a.toLowerCase().includes(assetSearch.toLowerCase())
-    )
-  }, [assetSearch])
+    let assets = ASSETS
+
+    // Filter by category
+    if (selectedCategory !== "all") {
+      const categoryAssets = getPythFeedsByCategory(selectedCategory)
+      assets = categoryAssets.map((feed) => feed.symbol)
+    }
+
+    // Filter by search with smart ranking
+    if (assetSearch) {
+      const searchLower = assetSearch.toLowerCase()
+      const filtered = assets.filter((a) =>
+        a.toLowerCase().includes(searchLower)
+      )
+
+      // Sort by relevance: exact match > starts with > contains
+      filtered.sort((a, b) => {
+        const aLower = a.toLowerCase()
+        const bLower = b.toLowerCase()
+
+        // Exact match comes first
+        if (aLower === searchLower) return -1
+        if (bLower === searchLower) return 1
+
+        // Starts with search term comes second
+        const aStarts = aLower.startsWith(searchLower)
+        const bStarts = bLower.startsWith(searchLower)
+        if (aStarts && !bStarts) return -1
+        if (!aStarts && bStarts) return 1
+
+        // Then sort by position of match
+        const aIndex = aLower.indexOf(searchLower)
+        const bIndex = bLower.indexOf(searchLower)
+        if (aIndex !== bIndex) return aIndex - bIndex
+
+        // Finally alphabetical
+        return a.localeCompare(b)
+      })
+
+      return filtered
+    }
+
+    return assets
+  }, [assetSearch, selectedCategory])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -151,12 +197,24 @@ export function CreateMarketForm({
   }, [isAssetDropdownOpen])
 
   const validateForm = (): boolean => {
+    let feedId: string | undefined
+    if (marketType === "PRICE") {
+      try {
+        feedId = getPythFeedId(asset)
+        console.log("Feed ID retrieved:", { asset, feedId })
+      } catch (err: any) {
+        console.error("Failed to get feed ID:", { asset, error: err.message })
+        setErrors({ asset: `Invalid asset: ${asset}` })
+        return false
+      }
+    }
+
     const formData =
       marketType === "PRICE"
         ? {
             marketType,
             asset,
-            feedId: getPythFeedId(asset),
+            feedId: feedId!,
             targetPrice,
             deadline,
             liquidityParam,
@@ -303,6 +361,33 @@ export function CreateMarketForm({
                               autoFocus
                             />
                           </div>
+                        </div>
+
+                        {/* Category Tabs */}
+                        <div className="flex gap-1 p-2 border-b border-white/10 overflow-x-auto">
+                          {(
+                            [
+                              "all",
+                              "crypto",
+                              "stocks",
+                              "forex",
+                              "commodities",
+                              "other",
+                            ] as const
+                          ).map((cat) => (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => setSelectedCategory(cat)}
+                              className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                                selectedCategory === cat
+                                  ? "bg-primary text-white"
+                                  : "bg-slate-800/50 text-white/60 hover:text-white hover:bg-slate-800"
+                              }`}
+                            >
+                              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                            </button>
+                          ))}
                         </div>
 
                         {/* Asset List */}

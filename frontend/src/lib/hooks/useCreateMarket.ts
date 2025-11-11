@@ -79,8 +79,20 @@ export const useCreateMarket = (): UseCreateMarketReturn => {
         let marketId: string | undefined
 
         if (data.marketType === "PRICE") {
-          // Get Pyth feed ID for the asset - now supports 20+ assets!
-          const pythFeedId = data.feedId || getPythFeedId(data.asset)
+          // Get Pyth feed ID for the asset - now supports 2700+ assets!
+          let pythFeedId: string
+          try {
+            pythFeedId = data.feedId || getPythFeedId(data.asset)
+          } catch (err: any) {
+            console.error("Failed to get Pyth feed ID:", {
+              asset: data.asset,
+              error: err.message,
+            })
+            throw new Error(
+              `Failed to get price feed for ${data.asset}: ${err.message}`
+            )
+          }
+
           if (!pythFeedId) {
             throw new Error(`Unsupported asset: ${data.asset}`)
           }
