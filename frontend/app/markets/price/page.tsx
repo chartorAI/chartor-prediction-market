@@ -1,21 +1,20 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { Plus } from "lucide-react"
 import { useMarkets } from "@/lib/hooks/useMarkets"
 import { useAuthStore } from "@/stores/authStore"
 import { useCreateMarket } from "@/lib/hooks/useCreateMarket"
 import { LoadingSpinner } from "@/components/common/LoadingSpinner"
-import { AssetTabs } from "@/components/markets/AssetTabs"
+import { TradingViewChart } from "@/components/charts/TradingViewChart"
 import { MarketCard } from "@/components/markets/MarketCard"
 import { CreateMarketModal } from "@/components/markets/CreateMarketModal"
 import { Button } from "@/components/ui/button"
-import { ASSETS } from "@/lib/constants"
-import type { Asset } from "@/types"
+import { ASSETS, TRADINGVIEW_SYMBOLS, type Asset } from "@/lib/constants"
 
 export default function PriceMarketsPage() {
   const [createMarketModalOpen, setCreateMarketModalOpen] = useState(false)
+  const [selectedAsset, setSelectedAsset] = useState<Asset | "ALL">("ALL")
   const { allMarkets, isLoading } = useMarkets()
   const { isAuthenticated } = useAuthStore()
   const { createMarket, isCreating } = useCreateMarket()
@@ -26,28 +25,30 @@ export default function PriceMarketsPage() {
       m.type === "PRICE" && !m.resolved
   )
 
-  // Group markets by asset
-  const marketsByAsset = ASSETS.reduce(
-    (acc, asset) => {
-      acc[asset] = priceMarkets.filter((m) => m.asset === asset)
-      return acc
-    },
-    {} as Record<Asset, typeof priceMarkets>
+  // Filter by selected asset
+  const filteredMarkets =
+    selectedAsset === "ALL"
+      ? priceMarkets
+      : priceMarkets.filter((m) => m.asset === selectedAsset)
+
+  // Sort by deadline (soonest first)
+  const sortedMarkets = [...filteredMarkets].sort(
+    (a, b) => a.deadline - b.deadline
   )
 
   return (
     <div className="min-h-screen bg-background-primary">
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-12">
+        <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
                 Price Prediction Markets
               </h1>
               <p className="text-lg text-white/60 max-w-2xl">
-                Predict future prices of BTC, ETH, BNB, GOLD, and OIL using
-                real-time Pyth oracle data
+                Predict future prices across 20+ assets using real-time Pyth
+                oracle data
               </p>
             </div>
             {isAuthenticated && (
@@ -62,67 +63,97 @@ export default function PriceMarketsPage() {
           </div>
         </div>
 
-        {/* Asset Tabs */}
-        <div className="mb-12">
-          <AssetTabs />
+        {/* Asset Filter Tabs */}
+        <div className="mb-8">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {/* ALL button */}
+            <button
+              onClick={() => setSelectedAsset("ALL")}
+              className={`
+                px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all
+                ${
+                  selectedAsset === "ALL"
+                    ? "bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg"
+                    : "bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                }
+              `}
+            >
+              ALL ({priceMarkets.length})
+            </button>
+
+            {/* Asset buttons */}
+            {ASSETS.map((asset) => {
+              const count = priceMarkets.filter((m) => m.asset === asset).length
+              return (
+                <button
+                  key={asset}
+                  onClick={() => setSelectedAsset(asset)}
+                  className={`
+                    px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all
+                    ${
+                      selectedAsset === asset
+                        ? "bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg"
+                        : "bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                    }
+                  `}
+                >
+                  {asset} ({count})
+                </button>
+              )
+            })}
+          </div>
         </div>
 
-        {/* Loading/Error States */}
+        {/* TradingView Chart (only show when specific asset selected) */}
+        {selectedAsset !== "ALL" && TRADINGVIEW_SYMBOLS[selectedAsset] && (
+          <div className="mb-8">
+            <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl overflow-hidden">
+              <TradingViewChart
+                symbol={TRADINGVIEW_SYMBOLS[selectedAsset]!}
+                asset={selectedAsset as any}
+                height={500}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Markets Grid */}
         {isLoading ? (
           <div className="flex justify-center py-16">
             <LoadingSpinner size="lg" />
           </div>
+        ) : sortedMarkets.length === 0 ? (
+          <div className="bg-white/5 border border-white/10 backdrop-blur-xl p-12 rounded-3xl text-center">
+            <p className="text-white/60 text-lg mb-2">
+              No active markets for{" "}
+              {selectedAsset === "ALL" ? "any asset" : selectedAsset}
+            </p>
+            <p className="text-white/40 text-sm">
+              Check back soon or create your own market
+            </p>
+          </div>
         ) : (
-          /* Markets Overview by Asset */
-          <div className="space-y-16">
-            {ASSETS.map((asset) => {
-              const assetMarkets = marketsByAsset[asset]
-              return (
-                <div key={asset}>
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <h2 className="text-3xl font-bold text-white mb-2">
-                        {asset}
-                      </h2>
-                      <p className="text-white/60">
-                        {assetMarkets.length} active{" "}
-                        {assetMarkets.length === 1 ? "market" : "markets"}
-                      </p>
-                    </div>
-                    {assetMarkets.length > 0 && (
-                      <Link
-                        href={`/markets/price/${asset.toLowerCase()}`}
-                        className="bg-white/5 border border-white/20 hover:bg-white/10 hover:border-primary text-white px-6 py-3 rounded-full font-medium transition-all flex items-center gap-2"
-                      >
-                        View All
-                        <span>→</span>
-                      </Link>
-                    )}
-                  </div>
-
-                  {assetMarkets.length === 0 ? (
-                    <div className="bg-white/5 border border-white/10 backdrop-blur-xl p-12 rounded-3xl text-center">
-                      <p className="text-white/60 text-lg">
-                        No active markets for {asset} yet
-                      </p>
-                      <p className="text-white/40 text-sm mt-2">
-                        Check back soon or create your own market
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {assetMarkets.slice(0, 3).map((market) => (
-                        <MarketCard
-                          key={market.id}
-                          market={market}
-                          showTradingButtons={true}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">
+                {selectedAsset === "ALL"
+                  ? "All Markets"
+                  : `${selectedAsset} Markets`}
+              </h2>
+              <p className="text-white/60">
+                {sortedMarkets.length}{" "}
+                {sortedMarkets.length === 1 ? "market" : "markets"}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedMarkets.map((market) => (
+                <MarketCard
+                  key={market.id}
+                  market={market}
+                  showTradingButtons={true}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
