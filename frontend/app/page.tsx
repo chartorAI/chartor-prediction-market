@@ -77,7 +77,7 @@ export default function Home() {
     <main className="min-h-screen bg-background-primary">
       {/* Hero Section */}
       <section className="pt-32 md:pt-40 pb-20 md:pb-32 px-4 lg:px-8 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto text-center relative z-10">
+        <div className="max-w-screen-2xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -168,7 +168,7 @@ export default function Home() {
 
       {/* Market Types Section */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-screen-2xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Choose Your Market
@@ -241,7 +241,7 @@ export default function Home() {
         id="how-it-works"
         className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-[#191818]"
       >
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-screen-2xl mx-auto">
           <div className="text-center mb-16">
             <div className="flex items-center justify-center space-x-6 mb-6">
               <div
@@ -295,7 +295,7 @@ export default function Home() {
 
       {/* Active Markets Section */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-screen-2xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Active Prediction Markets
