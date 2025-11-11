@@ -316,21 +316,6 @@ export default function Home() {
               ))}
             </div>
           )}
-
-          {recentMarkets.length > 0 && (
-            <div className="text-center mt-12">
-              <Link href="/markets/price">
-                <motion.button
-                  className="bg-white/5 border border-white/20 hover:bg-white/10 hover:border-primary text-white px-8 py-3 rounded-full font-medium transition-all inline-flex items-center gap-2"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  View All Markets
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </Link>
-            </div>
-          )}
         </div>
       </section>
     </main>

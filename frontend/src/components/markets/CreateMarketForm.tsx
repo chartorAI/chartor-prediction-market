@@ -46,9 +46,13 @@ const priceMarketSchema = z.object({
   liquidityParam: z
     .string()
     .min(1, "Liquidity parameter is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Liquidity parameter must be a positive number",
-    }),
+    .refine(
+      (val) =>
+        !isNaN(Number(val)) && Number(val) >= 0.001 && Number(val) <= 1000,
+      {
+        message: "Liquidity parameter must be between 0.001 and 1000",
+      }
+    ),
   description: z
     .string()
     .min(10, "Description must be at least 10 characters")
@@ -78,9 +82,13 @@ const liquidityMarketSchema = z.object({
   liquidityParam: z
     .string()
     .min(1, "Liquidity parameter is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Liquidity parameter must be a positive number",
-    }),
+    .refine(
+      (val) =>
+        !isNaN(Number(val)) && Number(val) >= 0.001 && Number(val) <= 1000,
+      {
+        message: "Liquidity parameter must be between 0.001 and 1000",
+      }
+    ),
   description: z
     .string()
     .min(10, "Description must be at least 10 characters")
@@ -107,7 +115,7 @@ export function CreateMarketForm({
   const [targetPrice, setTargetPrice] = useState("")
   const [targetLiquidity, setTargetLiquidity] = useState("")
   const [deadline, setDeadline] = useState("")
-  const [liquidityParam, setLiquidityParam] = useState("100")
+  const [liquidityParam, setLiquidityParam] = useState("10")
   const [description, setDescription] = useState("")
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isAssetDropdownOpen, setIsAssetDropdownOpen] = useState(false)
@@ -482,12 +490,13 @@ export function CreateMarketForm({
             </label>
             <Input
               type="number"
-              placeholder="100"
+              placeholder="10"
               value={liquidityParam}
               onChange={(e) => setLiquidityParam(e.target.value)}
               disabled={isSubmitting}
-              step="1"
-              min="1"
+              step="0.001"
+              min="0.001"
+              max="1000"
               className="h-12 bg-slate-900/50 border-white/10 focus:border-primary/50 text-white font-semibold rounded-lg"
             />
             <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
@@ -495,7 +504,7 @@ export function CreateMarketForm({
               <p className="text-sm text-white/70 leading-relaxed">
                 Higher values = more liquidity.{" "}
                 <span className="text-primary font-semibold">
-                  Recommended: 50-200
+                  Range: 0.001 - 1000
                 </span>
               </p>
             </div>

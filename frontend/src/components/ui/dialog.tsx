@@ -1,4 +1,5 @@
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils/cn"
 
 interface DialogContextValue {
@@ -97,8 +98,8 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
 
     if (!open) return null
 
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
+    const dialogContent = (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in">
         {/* Backdrop */}
         <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -112,7 +113,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
         <div
           ref={ref}
           className={cn(
-            "relative z-50 w-full max-w-lg mx-4 animate-slide-up",
+            "relative z-[100] w-full max-w-lg mx-4 animate-slide-up",
             "bg-glass-medium backdrop-blur-xl border border-border-medium rounded-xl shadow-2xl",
             "max-h-[90vh] overflow-y-auto",
             className
@@ -123,6 +124,11 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
         </div>
       </div>
     )
+
+    // Render in portal at document.body to escape any stacking context
+    return typeof document !== "undefined"
+      ? createPortal(dialogContent, document.body)
+      : null
   }
 )
 DialogContent.displayName = "DialogContent"
