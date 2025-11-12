@@ -32,6 +32,35 @@ export default function PriceMarketsPage() {
       m.type === "PRICE" && !m.resolved
   )
 
+  // Popular assets to show by default
+  const POPULAR_ASSETS = [
+    "BTC/USD",
+    "ETH/USD",
+    "SOL/USD",
+    "BNB/USD",
+    "XRP/USD",
+    "ADA/USD",
+    "DOGE/USD",
+    "MATIC/USD",
+    "DOT/USD",
+    "AVAX/USD",
+    "LINK/USD",
+    "UNI/USD",
+    "ATOM/USD",
+    "LTC/USD",
+    "NEAR/USD",
+    "AAPL/USD",
+    "TSLA/USD",
+    "GOOGL/USD",
+    "MSFT/USD",
+    "AMZN/USD",
+    "EUR/USD",
+    "GBP/USD",
+    "JPY/USD",
+    "Gold/USD",
+    "Silver/USD",
+  ]
+
   // Filter and sort assets with smart search
   const filteredAssets = useMemo(() => {
     let assets = ASSETS
@@ -72,7 +101,12 @@ export default function PriceMarketsPage() {
       return filtered
     }
 
-    // Show only first 50 assets by default to avoid overwhelming UI
+    // Show popular assets when on "all" category with no search
+    if (selectedCategory === "all") {
+      return POPULAR_ASSETS.filter((asset) => ASSETS.includes(asset))
+    }
+
+    // Show first 50 assets for specific categories
     return assets.slice(0, 50)
   }, [assetSearch, selectedCategory])
 

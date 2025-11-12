@@ -63,19 +63,6 @@ export function Navbar({ className }: NavbarProps) {
                   {item.label}
                 </Link>
               ))}
-              {isAuthenticated && (
-                <Link
-                  href="/positions"
-                  className={cn(
-                    "text-sm font-medium transition-colors",
-                    pathname === "/positions"
-                      ? "text-white"
-                      : "text-white/60 hover:text-white"
-                  )}
-                >
-                  My Positions
-                </Link>
-              )}
             </nav>
 
             {/* Connect Button */}
@@ -118,20 +105,6 @@ export function Navbar({ className }: NavbarProps) {
                   {item.label}
                 </Link>
               ))}
-              {isAuthenticated && (
-                <Link
-                  href="/positions"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "block px-4 py-3 rounded-lg text-sm font-medium transition-all",
-                    pathname === "/positions"
-                      ? "bg-primary text-white"
-                      : "text-white/60 hover:text-white hover:bg-white/5"
-                  )}
-                >
-                  My Positions
-                </Link>
-              )}
             </nav>
 
             {/* Connect Button */}
