@@ -11,6 +11,7 @@ import { ASSETS, type Asset } from "@/lib/constants"
 import {
   getPythFeedId,
   getPythFeedsByCategory,
+  getPythFeed,
   type PythFeed,
 } from "@/lib/constants/pythFeeds"
 import {
@@ -103,6 +104,7 @@ interface CreateMarketFormProps {
   onSubmit: (data: MarketFormData) => Promise<void>
   onCancel: () => void
   isSubmitting?: boolean
+  initialAsset?: string
 }
 
 export type MarketFormData =
@@ -113,9 +115,43 @@ export function CreateMarketForm({
   onSubmit,
   onCancel,
   isSubmitting = false,
+  initialAsset,
 }: CreateMarketFormProps) {
   const [marketType, setMarketType] = useState<"PRICE" | "LIQUIDITY">("PRICE")
-  const [asset, setAsset] = useState<Asset>(ASSETS[0] || "BTC/USD")
+  const [asset, setAsset] = useState<Asset>(() => {
+    
+    if (initialAsset) {
+      const searchSymbol = initialAsset.toUpperCase()
+
+      
+      const exactMatch = ASSETS.find((a) => a.toUpperCase() === searchSymbol)
+      if (exactMatch) {
+        return exactMatch as Asset
+      }
+
+      
+      const matchingAssets = ASSETS.filter((a) => {
+        try {
+          const feed = getPythFeed(a)
+          return feed.base.toUpperCase() === searchSymbol
+        } catch {
+          return false
+        }
+      })
+
+      if (matchingAssets.length > 0) {
+        const usdPair = matchingAssets.find((a) =>
+          a.toUpperCase().endsWith("/USD")
+        )
+        if (usdPair) {
+          return usdPair as Asset
+        }
+        return matchingAssets[0] as Asset
+      }
+    }
+    return ASSETS[0] || "BTC/USD"
+  })
+  const [isAssetPreselected] = useState<boolean>(!!initialAsset)
   const [targetPrice, setTargetPrice] = useState("")
   const [targetLiquidity, setTargetLiquidity] = useState("")
   const [deadline, setDeadline] = useState("")
@@ -326,8 +362,13 @@ export function CreateMarketForm({
               >
                 {/* Asset */}
                 <div className="space-y-3">
-                  <label className="text-base font-semibold text-white">
+                  <label className="text-base font-semibold text-white flex items-center gap-2">
                     Select Asset
+                    {isAssetPreselected && (
+                      <span className="text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                        Pre-selected
+                      </span>
+                    )}
                   </label>
                   <div className="relative asset-dropdown">
                     <button

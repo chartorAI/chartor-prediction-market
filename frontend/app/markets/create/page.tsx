@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { useAuthStore } from "@/stores/authStore"
 import { useCreateMarket } from "@/lib/hooks/useCreateMarket"
@@ -9,8 +9,11 @@ import { Button } from "@/components/ui/button"
 
 export default function CreateMarketPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { isAuthenticated } = useAuthStore()
   const { createMarket, isCreating } = useCreateMarket()
+
+  const assetQuery = searchParams.get("asset")
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
@@ -53,6 +56,7 @@ export default function CreateMarketPage() {
         {/* Create Market Form */}
         <div className="max-w-3xl mx-auto">
           <CreateMarketForm
+            initialAsset={assetQuery || undefined}
             onCancel={() => router.back()}
             onSubmit={async (data) => {
               const result = await createMarket(data)
