@@ -28,19 +28,27 @@ export default function LiquidityMarketsPage() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
                 Liquidity Prediction Markets
               </h1>
-              <p className="text-lg text-white/60 max-w-2xl">
-                Predict BNB/USDT pool liquidity on PancakeSwap V3 using
-                real-time on-chain data
-              </p>
+              {isAuthenticated && (
+                <Link href="/markets/create" className="hidden md:block">
+                  <Button className="bg-gradient-to-br from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Market
+                  </Button>
+                </Link>
+              )}
             </div>
+            <p className="text-lg text-white/60 max-w-2xl mb-4">
+              Predict BNB/USDT pool liquidity on PancakeSwap V3 using real-time
+              on-chain data
+            </p>
             {isAuthenticated && (
-              <Link href="/markets/create">
-                <Button className="bg-gradient-to-br from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg">
+              <Link href="/markets/create" className="md:hidden">
+                <Button className="w-full bg-gradient-to-br from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Market
                 </Button>

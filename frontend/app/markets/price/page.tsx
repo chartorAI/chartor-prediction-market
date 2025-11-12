@@ -5,7 +5,6 @@ import Link from "next/link"
 import { Plus, Search } from "lucide-react"
 import { useMarkets } from "@/lib/hooks/useMarkets"
 import { useAuthStore } from "@/stores/authStore"
-import { useCreateMarket } from "@/lib/hooks/useCreateMarket"
 import { LoadingSpinner } from "@/components/common/LoadingSpinner"
 import { TradingViewChart } from "@/components/charts/TradingViewChart"
 import { MarketCard } from "@/components/markets/MarketCard"
@@ -93,19 +92,27 @@ export default function PriceMarketsPage() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
                 Price Prediction Markets
               </h1>
-              <p className="text-lg text-white/60 max-w-2xl">
-                Predict future prices across 20+ assets using real-time Pyth
-                oracle data
-              </p>
+              {isAuthenticated && (
+                <Link href="/markets/create" className="hidden md:block">
+                  <Button className="bg-gradient-to-br from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Market
+                  </Button>
+                </Link>
+              )}
             </div>
+            <p className="text-lg text-white/60 max-w-2xl mb-4">
+              Predict future prices across 2000+ assets using real-time Pyth
+              oracle data
+            </p>
             {isAuthenticated && (
-              <Link href="/markets/create">
-                <Button className="bg-gradient-to-br from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg">
+              <Link href="/markets/create" className="md:hidden">
+                <Button className="w-full bg-gradient-to-br from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Market
                 </Button>
