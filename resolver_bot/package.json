@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test": "node src/test.js"
+    "test": "node src/test.js",
+    "resolve": "node src/cron.js"
   },
   "keywords": [
     "prediction-market",
