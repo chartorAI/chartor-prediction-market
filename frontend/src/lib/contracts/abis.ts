@@ -21,6 +21,13 @@ export const PREDICTION_MARKET_ABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "getMarketCount",
+    outputs: [{ internalType: "uint256", name: "count", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "uint256", name: "marketId", type: "uint256" }],
     name: "getMarket",
     outputs: [
@@ -400,6 +407,13 @@ export const LIQUIDITY_MARKET_ABI = [
     outputs: [
       { internalType: "uint256[]", name: "resolvedMarkets", type: "uint256[]" },
     ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getMarketCount",
+    outputs: [{ internalType: "uint256", name: "count", type: "uint256" }],
     stateMutability: "view",
     type: "function",
   },

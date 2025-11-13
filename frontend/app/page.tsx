@@ -16,7 +16,7 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner"
 import { MarketCard } from "@/components/markets/MarketCard"
 
 export default function Home() {
-  const { allMarkets, isLoading } = useMarkets()
+  const { allMarkets, totalMarketCount, isLoading } = useMarkets()
 
   // Calculate quick stats
   const activeMarkets = allMarkets.filter((m) => !m.resolved)
@@ -30,9 +30,9 @@ export default function Home() {
   )
 
   // Get recent markets (sorted by deadline, most recent first)
-  const recentMarkets = [...activeMarkets]
-    .sort((a, b) => b.deadline - a.deadline)
-    .slice(0, 6)
+  const recentMarkets = [...activeMarkets].sort(
+    (a, b) => b.deadline - a.deadline
+  )
 
   const features = [
     {
@@ -137,10 +137,10 @@ export default function Home() {
               </div>
               <div className="bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-lg hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300">
                 <div className="text-3xl font-bold text-white mb-1">
-                  {priceMarkets.length + liquidityMarkets.length}
+                  {totalMarketCount}
                 </div>
                 <div className="text-white/60 text-sm font-medium">
-                  Total Predictions
+                  Total Markets
                 </div>
               </div>
             </div>

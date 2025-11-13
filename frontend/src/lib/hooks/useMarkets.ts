@@ -43,6 +43,29 @@ export function useMarkets() {
       },
     })
 
+  // Fetch total market counts from both contracts
+  const { data: marketCounts } = useReadContracts({
+    contracts: [
+      {
+        address: addresses.predictionMarket,
+        abi: PREDICTION_MARKET_ABI,
+        functionName: "getMarketCount",
+      },
+      {
+        address: addresses.liquidityMarket,
+        abi: LIQUIDITY_MARKET_ABI,
+        functionName: "getMarketCount",
+      },
+    ],
+    query: {
+      refetchInterval: POLLING_INTERVAL,
+    },
+  })
+
+  const totalMarketCount =
+    Number(marketCounts?.[0]?.result || 0) +
+    Number(marketCounts?.[1]?.result || 0)
+
   // Fetch market details for price markets (config, qYes, qNo, resolved)
   const priceMarketContracts =
     priceMarketIds?.flatMap((id) => [
@@ -255,6 +278,7 @@ export function useMarkets() {
   return {
     markets: filteredMarkets,
     allMarkets: markets,
+    totalMarketCount,
     isLoading:
       loadingPriceIds ||
       loadingLiquidityIds ||
