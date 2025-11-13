@@ -20,9 +20,48 @@ const ethnocentric = localFont({
 })
 
 export const metadata: Metadata = {
-  title: "Chartor Prediction Market",
+  title: "Chartor Prediction Market - Predict & Earn on BNB Chain",
   description:
-    "Decentralized prediction markets on BNB Chain with account abstraction",
+    "Decentralized prediction markets powered by Pyth oracles and PancakeSwap on BNB Chain. Predict prices, forecast liquidity, and earn rewards.",
+  keywords: [
+    "prediction market",
+    "BNB Chain",
+    "DeFi",
+    "Pyth oracle",
+    "PancakeSwap",
+    "LMSR",
+    "crypto trading",
+    "decentralized finance",
+  ],
+  authors: [{ name: "Chartor AI" }],
+  creator: "Chartor AI",
+  publisher: "Chartor AI",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://prediction.chartor.ai",
+    siteName: "Chartor Prediction Market",
+    title: "Chartor Prediction Market - Predict & Earn on BNB Chain",
+    description:
+      "Decentralized prediction markets powered by Pyth oracles and PancakeSwap. Predict prices, forecast liquidity, and earn rewards on BNB Chain.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Chartor Prediction Market - Predict & Earn on BNB Chain",
+    description:
+      "Decentralized prediction markets powered by Pyth oracles and PancakeSwap. Predict prices, forecast liquidity, and earn rewards.",
+  },
 }
 
 export default function RootLayout({
