@@ -20,11 +20,6 @@ export {
 } from "./biconomy"
 
 // Configuration
-export {
-  web3AuthConfig,
-  chainConfig,
-  biconomyConfig,
-  contractAddresses,
-} from "./config"
+export { web3AuthConfig, chainConfig, biconomyConfig } from "./config"
 
 export { wagmiConfig } from "./wagmi"

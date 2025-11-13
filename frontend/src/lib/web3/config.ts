@@ -36,8 +36,3 @@ export const biconomyConfig = {
   bundlerUrl: process.env.NEXT_PUBLIC_BICONOMY_BUNDLER_URL || "",
   chainId: 97,
 }
-
-export const contractAddresses = {
-  predictionMarket: process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS || "",
-  liquidityMarket: process.env.NEXT_PUBLIC_LIQUIDITY_MARKET_ADDRESS || "",
-}

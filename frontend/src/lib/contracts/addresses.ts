@@ -7,8 +7,10 @@ export type ContractAddresses = {
 
 // BNB Testnet addresses
 export const BNB_TESTNET_ADDRESSES: ContractAddresses = {
-  predictionMarket: "0x145f0B7c4777D05C5326DE723c9087E1cd0C8C68",
-  liquidityMarket: "0xf6686a498d6FF970380d05946Cf10701125Fd2B0",
+  predictionMarket:
+    "0x145f0B7c4777D05C5326DE723c9087E1cd0C8C68" as `0x${string}`,
+  liquidityMarket:
+    "0xf6686a498d6FF970380d05946Cf10701125Fd2B0" as `0x${string}`,
 }
 
 // Get addresses based on chain ID
