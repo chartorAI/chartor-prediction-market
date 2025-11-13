@@ -1,7 +1,14 @@
 import { ethers } from "ethers";
 import { config } from "./config.js";
-import { PREDICTION_MARKET_ABI, LIQUIDITY_MARKET_ABI } from "./abis.js";
+import {
+  PREDICTION_MARKET_ABI,
+  LIQUIDITY_MARKET_ABI,
+  PYTH_ABI,
+} from "./abis.js";
 import { logger } from "./logger.js";
+
+const PYTH_ORACLE_ADDRESS = "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb";
+const PYTH_HERMES_API = "https://hermes.pyth.network";
 
 export class MarketResolver {
   constructor() {
@@ -20,10 +27,65 @@ export class MarketResolver {
       this.wallet
     );
 
+    this.pythOracle = new ethers.Contract(
+      PYTH_ORACLE_ADDRESS,
+      PYTH_ABI,
+      this.wallet
+    );
+
     logger.info("Resolver initialized", {
       address: this.wallet.address,
       network: config.chainId,
     });
+  }
+
+  async fetchPythPriceUpdate(feedId) {
+    try {
+      const feedIdHex = feedId.startsWith("0x") ? feedId.slice(2) : feedId;
+      const url = `${PYTH_HERMES_API}/v2/updates/price/latest?ids[]=${feedIdHex}`;
+
+      logger.debug(`Fetching price update from Pyth: ${url}`);
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Pyth API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.binary || !data.binary.data || data.binary.data.length === 0) {
+        throw new Error("No price update data received from Pyth");
+      }
+
+      return data.binary.data[0];
+    } catch (error) {
+      logger.error(`Failed to fetch Pyth price update: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updatePythPrice(feedId) {
+    try {
+      const priceUpdateData = await this.fetchPythPriceUpdate(feedId);
+      const updateData = [`0x${priceUpdateData}`];
+
+      const updateFee = await this.pythOracle.getUpdateFee(updateData);
+      logger.debug(`Pyth update fee: ${ethers.formatEther(updateFee)} BNB`);
+
+      const tx = await this.pythOracle.updatePriceFeeds(updateData, {
+        value: updateFee,
+        gasLimit: 200000,
+      });
+
+      logger.debug(`Pyth price update tx: ${tx.hash}`);
+      await tx.wait();
+      logger.debug(`Pyth price updated successfully`);
+
+      return true;
+    } catch (error) {
+      logger.error(`Failed to update Pyth price: ${error.message}`);
+      return false;
+    }
   }
 
   async getBalance() {
@@ -52,6 +114,16 @@ export class MarketResolver {
           logger.info(
             `Resolving price market #${marketId}: ${market.description}`
           );
+
+          // Update Pyth price feed before resolving
+          logger.debug(`Updating Pyth price for feed: ${market.pythFeedId}`);
+          const priceUpdated = await this.updatePythPrice(market.pythFeedId);
+
+          if (!priceUpdated) {
+            logger.warn(
+              `Failed to update Pyth price for market #${marketId}, attempting resolution anyway...`
+            );
+          }
 
           const tx = await this.predictionMarket.resolveMarket(marketId, {
             gasLimit: config.gasLimit,
