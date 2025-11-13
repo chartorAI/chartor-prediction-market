@@ -15,7 +15,6 @@ import {
   getPythFeedsByCategory,
   type PythFeed,
 } from "@/lib/constants/pythFeeds"
-import { getTradingViewSymbol } from "@/lib/utils/tradingViewSymbols"
 
 export default function PriceMarketsPage() {
   const [selectedAsset, setSelectedAsset] = useState<Asset | "ALL">("ALL")
@@ -243,21 +242,29 @@ export default function PriceMarketsPage() {
         </div>
 
         {/* TradingView Chart (only show when specific asset selected) */}
-        {selectedAsset !== "ALL" &&
-          (() => {
-            const tvSymbol = getTradingViewSymbol(selectedAsset)
-            return tvSymbol ? (
-              <div className="mb-8">
-                <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl overflow-hidden">
-                  <TradingViewChart
-                    symbol={tvSymbol}
-                    asset={selectedAsset as any}
-                    height={500}
-                  />
-                </div>
-              </div>
-            ) : null
-          })()}
+        {selectedAsset !== "ALL" && (
+          <div className="mb-8 space-y-4">
+            {/* Chart - will be hidden if not available */}
+            <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl overflow-hidden">
+              <TradingViewChart
+                symbol={selectedAsset.replace("/", "_")}
+                asset={selectedAsset as any}
+                height={500}
+              />
+            </div>
+            {/* Analysis Button - always show */}
+            <div className="flex justify-end">
+              <a
+                href="https://chartor.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white text-sm font-medium rounded-lg transition-all duration-300 animate-glow hover:scale-105"
+              >
+                Need analysis of the market?
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Markets Grid */}
         {isLoading ? (

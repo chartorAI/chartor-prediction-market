@@ -18,10 +18,6 @@ export type Asset = string
 
 // Re-export for convenience
 export { PYTH_FEEDS, getPythFeedId, getPythFeed } from "./constants/pythFeeds"
-export {
-  getTradingViewSymbol,
-  hasTradingViewChart,
-} from "./utils/tradingViewSymbols"
 
 // Market types
 export const MARKET_TYPES = ["PRICE", "LIQUIDITY"] as const
@@ -34,28 +30,3 @@ export const WHALE_UPDATE_INTERVAL = 15000 // 15 seconds
 // Display settings
 export const MAX_WHALE_DISPLAY = 3
 export const ADDRESS_TRUNCATE_LENGTH = 6
-
-// TradingView symbols (exchange:symbol format)
-export const TRADINGVIEW_SYMBOLS: Partial<Record<Asset, string>> = {
-  BTC: "BINANCE:BTCUSDT",
-  ETH: "BINANCE:ETHUSDT",
-  BNB: "BINANCE:BNBUSDT",
-  SOL: "BINANCE:SOLUSDT",
-  MATIC: "BINANCE:MATICUSDT",
-  AVAX: "BINANCE:AVAXUSDT",
-  DOGE: "BINANCE:DOGEUSDT",
-  XRP: "BINANCE:XRPUSDT",
-  ADA: "BINANCE:ADAUSDT",
-  DOT: "BINANCE:DOTUSDT",
-  GOLD: "OANDA:XAUUSD",
-  SILVER: "OANDA:XAGUSD",
-  OIL: "TVC:USOIL",
-  EUR: "FX:EURUSD",
-  GBP: "FX:GBPUSD",
-  JPY: "FX:USDJPY",
-  AAPL: "NASDAQ:AAPL",
-  TSLA: "NASDAQ:TSLA",
-  MSFT: "NASDAQ:MSFT",
-  GOOGL: "NASDAQ:GOOGL",
-  AMZN: "NASDAQ:AMZN",
-}

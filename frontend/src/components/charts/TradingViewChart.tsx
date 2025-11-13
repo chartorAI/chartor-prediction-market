@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, memo } from "react"
+import { useEffect, useRef, memo, useState } from "react"
+import { findSymbol } from "@/lib/utils/findSymbol"
 import type { Asset } from "@/types"
 
 export type Timeframe = "1H" | "4H" | "1D" | "1W"
@@ -29,8 +30,42 @@ export const TradingViewChart = memo(function TradingViewChart({
 }: TradingViewChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetRef = useRef<any>(null)
+  const [isSearching, setIsSearching] = useState(true)
+  const [resolvedSymbol, setResolvedSymbol] = useState<string | null>(null)
+  const [symbolNotFound, setSymbolNotFound] = useState(false)
 
+  // First effect: Search for symbol
   useEffect(() => {
+    const searchSymbol = async () => {
+      setIsSearching(true)
+      setSymbolNotFound(false)
+
+      try {
+        const result = await findSymbol(symbol)
+        if (result && result.symbol) {
+          console.log(`[TradingView] Found chart symbol: ${result.symbol}`)
+          setResolvedSymbol(result.symbol)
+        } else {
+          console.log(`[TradingView] Symbol not found: ${symbol}`)
+          setSymbolNotFound(true)
+          setResolvedSymbol(null)
+        }
+      } catch (error) {
+        console.error("[TradingView] Error searching for symbol:", error)
+        setSymbolNotFound(true)
+        setResolvedSymbol(null)
+      }
+
+      setIsSearching(false)
+    }
+
+    searchSymbol()
+  }, [symbol])
+
+  // Second effect: Initialize widget once symbol is resolved
+  useEffect(() => {
+    if (!resolvedSymbol || isSearching) return
+
     const initWidget = () => {
       if (containerRef.current && window.TradingView) {
         // Remove existing widget if any
@@ -42,7 +77,7 @@ export const TradingViewChart = memo(function TradingViewChart({
         widgetRef.current = new window.TradingView.widget({
           container_id: containerRef.current.id,
           autosize: true,
-          symbol: symbol,
+          symbol: resolvedSymbol,
           interval: "D",
           timezone: "Etc/UTC",
           theme: theme === "dark" ? "dark" : "light",
@@ -52,19 +87,14 @@ export const TradingViewChart = memo(function TradingViewChart({
           enable_publishing: false,
           hide_top_toolbar: false,
           hide_legend: false,
-          save_image: false,
+          save_image: true,
           backgroundColor: theme === "dark" ? "#000000" : "#ffffff",
           gridColor:
             theme === "dark"
               ? "rgba(255, 255, 255, 0.1)"
               : "rgba(0, 0, 0, 0.1)",
           allow_symbol_change: false,
-          studies: [
-            {
-              id: "Volume@tv-basicstudies",
-              inputs: {},
-            },
-          ],
+          studies: [],
           disabled_features: [
             "use_localstorage_for_settings",
             "header_symbol_search",
@@ -123,7 +153,12 @@ export const TradingViewChart = memo(function TradingViewChart({
         widgetRef.current = null
       }
     }
-  }, [symbol, theme])
+  }, [resolvedSymbol, theme, isSearching])
+
+  // Don't render anything if symbol not found
+  if (symbolNotFound && !isSearching) {
+    return null
+  }
 
   return (
     <div className={`relative ${className}`}>
@@ -133,6 +168,14 @@ export const TradingViewChart = memo(function TradingViewChart({
         className="rounded-3xl overflow-hidden"
         style={{ height: `${height}px` }}
       />
+      {isSearching && (
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-3xl"
+          style={{ zIndex: 10 }}
+        >
+          <p className="text-white text-sm">Loading chart...</p>
+        </div>
+      )}
     </div>
   )
 })
