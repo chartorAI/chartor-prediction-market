@@ -1,0 +1,41 @@
+name: Resolve Expired Markets
+
+on:
+  schedule:
+    # Run every hour (at minute 0)
+    # Safe for free tier: ~24 runs/day = ~720 min/month (well within 2000 min limit)
+    - cron: "0 * * * *"
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: resolver_bot/package-lock.json
+
+      - name: Install dependencies
+        working-directory: resolver_bot
+        run: npm ci
+
+      - name: Run resolver bot
+        working-directory: resolver_bot
+        env:
+          RPC_URL: ${{ secrets.RPC_URL }}
+          CHAIN_ID: ${{ secrets.CHAIN_ID }}
+          PREDICTION_MARKET_ADDRESS: ${{ secrets.PREDICTION_MARKET_ADDRESS }}
+          LIQUIDITY_MARKET_ADDRESS: ${{ secrets.LIQUIDITY_MARKET_ADDRESS }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          GAS_LIMIT: ${{ secrets.GAS_LIMIT }}
+          LOG_LEVEL: info
+        run: npm run resolve
