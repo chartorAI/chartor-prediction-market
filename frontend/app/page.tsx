@@ -83,7 +83,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight font-ethnocentric">
               Predict the Future.
               <br />
               <span className="text-gradient bg-gradient-to-r from-primary via-purple-500 to-accent-blue bg-clip-text text-transparent">

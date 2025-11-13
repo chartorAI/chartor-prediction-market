@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Outfit } from "next/font/google"
+import localFont from "next/font/local"
 import Script from "next/script"
 import "./globals.css"
 import { Toaster } from "react-hot-toast"
@@ -8,13 +9,18 @@ import { WagmiProvider } from "@/lib/web3/WagmiProvider"
 import { ErrorBoundary } from "@/components/common"
 import { Navbar, Footer } from "@/components/layout"
 
-const inter = Inter({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-outfit",
+})
+
+const ethnocentric = localFont({
+  src: "./fonts/eth.otf",
+  variable: "--font-ethnocentric",
 })
 
 export const metadata: Metadata = {
-  title: "Prediction Market - BNB Chain",
+  title: "Chartor Prediction Market",
   description:
     "Decentralized prediction markets on BNB Chain with account abstraction",
 }
@@ -25,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${outfit.variable} ${ethnocentric.variable}`}>
       <body className="antialiased flex flex-col min-h-screen">
         <Script src="https://s3.tradingview.com/tv.js" strategy="lazyOnload" />
         <ErrorBoundary>
