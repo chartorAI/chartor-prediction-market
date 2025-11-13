@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { useAuthStore } from "@/stores/authStore"
@@ -7,7 +8,7 @@ import { useCreateMarket } from "@/lib/hooks/useCreateMarket"
 import { CreateMarketForm } from "@/components/markets"
 import { Button } from "@/components/ui/button"
 
-export default function CreateMarketPage() {
+function CreateMarketContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { isAuthenticated } = useAuthStore()
@@ -74,5 +75,19 @@ export default function CreateMarketPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CreateMarketPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background-primary flex items-center justify-center">
+          <div className="text-white">Loading...</div>
+        </div>
+      }
+    >
+      <CreateMarketContent />
+    </Suspense>
   )
 }
