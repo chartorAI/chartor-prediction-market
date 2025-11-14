@@ -3,7 +3,7 @@
 
 # Chartor Prediction Market
   
-  A decentralized prediction market platform built on Binance Smart Chain, featuring automated market making, social authentication, gasless transactions, and automated market resolution.
+  A decentralized prediction market platform built on Binance Smart Chain, featuring automated market making, social authentication and automated market resolution.
   
 </div>
 
