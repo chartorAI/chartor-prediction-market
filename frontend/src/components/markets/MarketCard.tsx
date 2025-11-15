@@ -5,6 +5,7 @@ import { CountdownTimer } from "@/components/common/CountdownTimer"
 import { TradingButtons } from "@/components/trading/TradingButtons"
 import { calculateMarketVolume } from "@/lib/utils/marketPrices"
 import { useMarketDetails } from "@/lib/hooks/useMarketDetails"
+import { useWhaleData } from "@/lib/hooks/useWhaleData"
 import type { Market } from "@/types"
 
 interface MarketCardProps {
@@ -20,16 +21,15 @@ export function MarketCard({
   linkTo,
   className = "",
 }: MarketCardProps) {
-  // Fetch prices from contract
-  const { details } = useMarketDetails(market)
+  const { whales } = useWhaleData(market)
 
   // Computed values
   const totalVolume = calculateMarketVolume(market)
   const assetName = market.type === "PRICE" ? market.asset : "BNB/USDT"
 
-  // Calculate price percentages from contract data
-  const yesPricePercent = details ? (Number(details.yesPrice) / 1e18) * 100 : 50
-  const noPricePercent = details ? (Number(details.noPrice) / 1e18) * 100 : 50
+  // Get YES and NO whales
+  const yesWhale = whales.find((w) => w.isYes)
+  const noWhale = whales.find((w) => !w.isYes)
 
   // Render helpers
   const renderTargetInfo = () => {
@@ -103,13 +103,45 @@ export function MarketCard({
       </div>
 
       {/* Action area: Trading buttons or view link */}
-      <div className="mt-auto">
+      <div className="mt-auto space-y-3">
         {showTradingButtons ? (
           <TradingButtons market={market} />
         ) : (
           <div className="flex items-center justify-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all py-3 px-4 bg-primary/10 rounded-xl hover:bg-primary/20 border border-primary/20">
             <span>View Market</span>
             <span className="text-base">→</span>
+          </div>
+        )}
+
+        {/* Whale Tracking - Inline Display (only show when trading buttons are visible) */}
+        {showTradingButtons && (yesWhale || noWhale) && (
+          <div className="space-y-1.5 pt-2 border-t border-white/5">
+            {yesWhale && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-success/80 font-medium">YES Whale</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-white/60 font-mono">
+                    {yesWhale.formattedAddress}
+                  </span>
+                  <span className="text-white/80 font-semibold">
+                    {yesWhale.formattedAmount} BNB
+                  </span>
+                </div>
+              </div>
+            )}
+            {noWhale && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-error/80 font-medium">NO Whale</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-white/60 font-mono">
+                    {noWhale.formattedAddress}
+                  </span>
+                  <span className="text-white/80 font-semibold">
+                    {noWhale.formattedAmount} BNB
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

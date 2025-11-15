@@ -1,5 +1,3 @@
-// Hook for fetching and tracking whale bets with 15-second polling
-
 import { useEffect, useState } from "react"
 import { useReadContracts } from "wagmi"
 import {
@@ -53,7 +51,6 @@ export function useWhaleData(market: Market | null) {
     },
   })
 
-  // Process whale data
   useEffect(() => {
     if (!market || !data?.[0] || data[0].status !== "success") {
       setWhales([])
@@ -61,12 +58,18 @@ export function useWhaleData(market: Market | null) {
     }
 
     const whaleData = data[0].result as unknown as MarketWhales
+
+    if (!whaleData || !whaleData.largestYes || !whaleData.largestNo) {
+      setWhales([])
+      return
+    }
+
     const formattedWhales: FormattedWhaleBet[] = []
 
-    // Add largest YES bet if it exists
     if (
+      whaleData.largestYes.whale &&
       whaleData.largestYes.whale !==
-      "0x0000000000000000000000000000000000000000"
+        "0x0000000000000000000000000000000000000000"
     ) {
       formattedWhales.push({
         marketId: market.id,
@@ -80,8 +83,8 @@ export function useWhaleData(market: Market | null) {
       })
     }
 
-    // Add largest NO bet if it exists
     if (
+      whaleData.largestNo.whale &&
       whaleData.largestNo.whale !== "0x0000000000000000000000000000000000000000"
     ) {
       formattedWhales.push({
@@ -96,7 +99,6 @@ export function useWhaleData(market: Market | null) {
       })
     }
 
-    // Sort by amount (largest first)
     formattedWhales.sort((a, b) => (a.amount > b.amount ? -1 : 1))
 
     // Check for new whales
@@ -158,7 +160,6 @@ export function useWhalesData(markets: Market[]) {
     },
   })
 
-  // Process whale data for all markets
   useEffect(() => {
     if (!data || markets.length === 0) return
 
@@ -169,12 +170,17 @@ export function useWhalesData(markets: Market[]) {
 
       if (result?.status === "success") {
         const whaleData = result.result as unknown as MarketWhales
+
+        if (!whaleData || !whaleData.largestYes || !whaleData.largestNo) {
+          return
+        }
+
         const formattedWhales: FormattedWhaleBet[] = []
 
-        // Add largest YES bet
         if (
+          whaleData.largestYes.whale &&
           whaleData.largestYes.whale !==
-          "0x0000000000000000000000000000000000000000"
+            "0x0000000000000000000000000000000000000000"
         ) {
           formattedWhales.push({
             marketId: market.id,
@@ -188,10 +194,10 @@ export function useWhalesData(markets: Market[]) {
           })
         }
 
-        // Add largest NO bet
         if (
+          whaleData.largestNo.whale &&
           whaleData.largestNo.whale !==
-          "0x0000000000000000000000000000000000000000"
+            "0x0000000000000000000000000000000000000000"
         ) {
           formattedWhales.push({
             marketId: market.id,
@@ -205,7 +211,6 @@ export function useWhalesData(markets: Market[]) {
           })
         }
 
-        // Sort by amount
         formattedWhales.sort((a, b) => (a.amount > b.amount ? -1 : 1))
 
         newWhalesByMarket.set(market.id, formattedWhales)
@@ -232,14 +237,12 @@ export function useTopWhales(markets: Market[], limit: number = 10) {
   const [topWhales, setTopWhales] = useState<FormattedWhaleBet[]>([])
 
   useEffect(() => {
-    // Combine all whales from all markets
     const allWhales: FormattedWhaleBet[] = []
 
     whalesByMarket.forEach((whales) => {
       allWhales.push(...whales)
     })
 
-    // Sort by amount and take top N
     const sorted = allWhales.sort((a, b) => (a.amount > b.amount ? -1 : 1))
     setTopWhales(sorted.slice(0, limit))
   }, [whalesByMarket, limit])
@@ -249,8 +252,6 @@ export function useTopWhales(markets: Market[], limit: number = 10) {
     isLoading,
   }
 }
-
-// Helper functions
 
 /**
  * Format BNB amount with 2 decimal precision
