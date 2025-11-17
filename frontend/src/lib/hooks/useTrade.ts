@@ -156,9 +156,6 @@ export const useTrade = (): UseTradeReturn => {
           cost: cost.toString(),
         })
 
-        // Refresh market data after successful trade
-        // This will trigger a re-fetch in components using useMarkets
-        setMarkets([])
 
         return { success: true, txHash }
       } catch (err: any) {
