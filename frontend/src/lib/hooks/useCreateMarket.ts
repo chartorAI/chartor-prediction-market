@@ -186,9 +186,7 @@ export const useCreateMarket = (): UseCreateMarketReturn => {
           marketType: data.marketType,
         })
 
-        // Refresh market list after successful creation
-        // This will trigger a re-fetch in components using useMarkets
-        setMarkets([])
+        // Market list will auto-refresh via polling in useMarkets hook
 
         return { success: true, marketId, txHash }
       } catch (err: any) {
