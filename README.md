@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./frontend/public/trianglelogo.svg" alt="Chartor Logo" width="200"/>
 
-# Chartor Prediction Market.
+# Chartor Prediction Market..
   
   A decentralized prediction market platform built on Binance Smart Chain, featuring automated market making, social authentication and automated market resolution..
   
