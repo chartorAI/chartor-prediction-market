@@ -32,9 +32,9 @@ export function TradingButtons({
   // Calculate prices
   const { yesPricePercent, noPricePercent } = calculateMarketPrices(market)
 
-  // Calculate price in BNB (assuming 1 share costs the probability in BNB)
-  const yesPriceBNB = yesPricePercent / 100
-  const noPriceBNB = noPricePercent / 100
+  // With 1e16 denomination: 1 share = 0.01 BNB payout
+  const yesPriceBNB = (yesPricePercent / 100) * 0.01
+  const noPriceBNB = (noPricePercent / 100) * 0.01
 
   // Handlers
   const handleButtonClick = (isYes: boolean) => {

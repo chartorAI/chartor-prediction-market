@@ -279,11 +279,12 @@ export function useTopWhales(markets: Market[], limit: number = 10) {
 }
 
 /**
- * Format BNB amount with 2 decimal precision
+ * Format BNB amount with 4 decimal precision
+ * Note: Whale amounts are in BNB (1e18), not shares
  */
 function formatAmount(amount: bigint): string {
   const bnbAmount = Number(amount) / 1e18
-  return bnbAmount.toFixed(2)
+  return bnbAmount.toFixed(4)
 }
 
 /**

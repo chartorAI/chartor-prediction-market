@@ -388,6 +388,13 @@ export const PREDICTION_MARKET_ABI = [
     name: "WhaleBet",
     type: "event",
   },
+  {
+    inputs: [],
+    name: "getContractBalance",
+    outputs: [{ internalType: "uint256", name: "balance", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
 ] as const
 
 export const LIQUIDITY_MARKET_ABI = [
@@ -762,5 +769,12 @@ export const LIQUIDITY_MARKET_ABI = [
     ],
     name: "WhaleBet",
     type: "event",
+  },
+  {
+    inputs: [],
+    name: "getContractBalance",
+    outputs: [{ internalType: "uint256", name: "balance", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
   },
 ] as const

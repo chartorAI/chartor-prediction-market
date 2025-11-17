@@ -102,8 +102,8 @@ export function usePositionPayout(position: Position | null) {
         const noPrice = noPriceResult.result as bigint
 
         // Potential payout = (yesShares * yesPrice) + (noShares * noPrice)
-        const yesPayout = (position.yesShares * yesPrice) / BigInt(1e18)
-        const noPayout = (position.noShares * noPrice) / BigInt(1e18)
+        const yesPayout = (position.yesShares * yesPrice) / BigInt(1e16)
+        const noPayout = (position.noShares * noPrice) / BigInt(1e16)
         potentialPayout = yesPayout + noPayout
       }
     }
@@ -244,8 +244,8 @@ export function usePositionPayouts(positions: Position[]) {
             const yesPrice = yesPriceResult.result as bigint
             const noPrice = noPriceResult.result as bigint
 
-            const yesPayout = (position.yesShares * yesPrice) / BigInt(1e18)
-            const noPayout = (position.noShares * noPrice) / BigInt(1e18)
+            const yesPayout = (position.yesShares * yesPrice) / BigInt(1e16)
+            const noPayout = (position.noShares * noPrice) / BigInt(1e16)
             potentialPayout = yesPayout + noPayout
           }
         }

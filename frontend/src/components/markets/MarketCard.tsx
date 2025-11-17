@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { CountdownTimer } from "@/components/common/CountdownTimer"
 import { TradingButtons } from "@/components/trading/TradingButtons"
-import { calculateMarketVolume } from "@/lib/utils/marketPrices"
 import { useMarketDetails } from "@/lib/hooks/useMarketDetails"
 import { useWhaleData } from "@/lib/hooks/useWhaleData"
 import type { Market } from "@/types"
@@ -22,9 +21,10 @@ export function MarketCard({
   className = "",
 }: MarketCardProps) {
   const { whales } = useWhaleData(market)
+  const { details } = useMarketDetails(market)
 
   // Computed values
-  const totalVolume = calculateMarketVolume(market)
+  const marketBalance = details?.marketBalance || BigInt(0)
   const assetName = market.type === "PRICE" ? market.asset : "BNB/USDT"
 
   // Get YES and NO whales
@@ -80,7 +80,7 @@ export function MarketCard({
         <div className="flex items-center gap-1.5">
           <div className="w-1.5 h-1.5 rounded-full bg-primary/60"></div>
           <span className="text-xs text-white/60 font-medium">
-            {totalVolume.toFixed(2)} BNB
+            {(Number(marketBalance) / 1e18).toFixed(4)} BNB
           </span>
         </div>
       </div>

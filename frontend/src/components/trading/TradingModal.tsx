@@ -73,7 +73,8 @@ export function TradingModal({
       if (!shareAmount || shareAmount === "") return BigInt(0)
       const parsed = parseFloat(shareAmount)
       if (isNaN(parsed) || parsed <= 0) return BigInt(0)
-      return BigInt(Math.floor(parsed * 1e18))
+      // Use 1e16 denomination (100x smaller) to make shares more affordable
+      return BigInt(Math.floor(parsed * 1e16))
     } catch {
       return BigInt(0)
     }
@@ -328,7 +329,7 @@ export function TradingModal({
                         <p className="leading-relaxed">
                           If outcome is correct, you'll receive{" "}
                           <span className="text-white font-semibold">
-                            {shareAmount} BNB
+                            {(parseFloat(shareAmount) * 0.01).toFixed(4)} BNB
                           </span>
                         </p>
                         <p className="text-white/50 mt-1">
@@ -336,7 +337,7 @@ export function TradingModal({
                           <span className="text-emerald-400 font-semibold">
                             ~
                             {(
-                              parseFloat(shareAmount) -
+                              parseFloat(shareAmount) * 0.01 -
                               parseFloat(formatBigInt(totalCost, 18, 4))
                             ).toFixed(4)}{" "}
                             BNB

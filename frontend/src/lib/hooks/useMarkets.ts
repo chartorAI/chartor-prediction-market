@@ -66,7 +66,6 @@ export function useMarkets() {
     Number(marketCounts?.[0]?.result || 0) +
     Number(marketCounts?.[1]?.result || 0)
 
-  // Fetch market details for price markets (config, qYes, qNo, resolved)
   const priceMarketContracts =
     priceMarketIds?.flatMap((id) => [
       {
@@ -272,6 +271,33 @@ export function useMarkets() {
     addresses.liquidityMarket,
   ])
 
+  // Fetch total contract balances for volume calculation
+  const { data: contractBalances } = useReadContracts({
+    contracts: [
+      {
+        address: addresses.predictionMarket,
+        abi: PREDICTION_MARKET_ABI,
+        functionName: "getContractBalance",
+      },
+      {
+        address: addresses.liquidityMarket,
+        abi: LIQUIDITY_MARKET_ABI,
+        functionName: "getContractBalance",
+      },
+    ],
+    query: {
+      refetchInterval: POLLING_INTERVAL,
+    },
+  })
+
+  const totalVolume =
+    (contractBalances?.[0]?.status === "success"
+      ? (contractBalances[0].result as bigint)
+      : BigInt(0)) +
+    (contractBalances?.[1]?.status === "success"
+      ? (contractBalances[1].result as bigint)
+      : BigInt(0))
+
   // Filter markets by type
   const filteredMarkets = markets.filter((m) => m.type === selectedMarketType)
 
@@ -279,6 +305,7 @@ export function useMarkets() {
     markets: filteredMarkets,
     allMarkets: markets,
     totalMarketCount,
+    totalVolume,
     isLoading:
       loadingPriceIds ||
       loadingLiquidityIds ||

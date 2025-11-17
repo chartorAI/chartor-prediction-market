@@ -85,13 +85,13 @@ export function PositionCard({ position, className }: PositionCardProps) {
         <div className="p-3 rounded-lg bg-success/10 border border-success/30">
           <div className="text-xs text-text-secondary mb-1">YES Shares</div>
           <div className="text-xl font-bold font-mono text-success">
-            {formatBigInt(position.yesShares, 18, 2)}
+            {formatBigInt(position.yesShares, 16, 2)}
           </div>
         </div>
         <div className="p-3 rounded-lg bg-error/10 border border-error/30">
           <div className="text-xs text-text-secondary mb-1">NO Shares</div>
           <div className="text-xl font-bold font-mono text-error">
-            {formatBigInt(position.noShares, 18, 2)}
+            {formatBigInt(position.noShares, 16, 2)}
           </div>
         </div>
       </div>
@@ -192,8 +192,8 @@ export function PositionCard({ position, className }: PositionCardProps) {
               </div>
               <div className="text-sm text-text-secondary mt-1">
                 {market.yesWins
-                  ? `${formatBigInt(position.yesShares, 18, 2)} YES shares`
-                  : `${formatBigInt(position.noShares, 18, 2)} NO shares`}
+                  ? `${formatBigInt(position.yesShares, 16, 2)} YES shares`
+                  : `${formatBigInt(position.noShares, 16, 2)} NO shares`}
               </div>
             </div>
           )}
@@ -213,8 +213,8 @@ export function PositionCard({ position, className }: PositionCardProps) {
               </div>
               <div className="text-sm text-text-secondary mt-1">
                 {market.yesWins
-                  ? `${formatBigInt(position.noShares, 18, 2)} NO shares`
-                  : `${formatBigInt(position.yesShares, 18, 2)} YES shares`}
+                  ? `${formatBigInt(position.noShares, 16, 2)} NO shares`
+                  : `${formatBigInt(position.yesShares, 16, 2)} YES shares`}
               </div>
             </div>
           )}

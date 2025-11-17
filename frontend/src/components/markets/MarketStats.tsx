@@ -90,7 +90,7 @@ export function MarketStats({
         <StatCard
           icon={<Droplets className="w-5 h-5" />}
           label="Liquidity Depth"
-          value={formatNumber(Number(formatBigInt(liquidityDepth, 18, 0)))}
+          value={formatNumber(Number(formatBigInt(liquidityDepth, 16, 0)))}
           unit="shares"
           description="Total shares issued"
         />

@@ -8,8 +8,9 @@ import type { Market } from "@/types"
  * The actual prices are calculated by the smart contract using the full LMSR formula
  */
 export function calculateMarketPrices(market: Market) {
-  const qYes = Number(market.qYes) / 1e18
-  const qNo = Number(market.qNo) / 1e18
+  // Shares use 1e16 denomination (1 share = 0.01 BNB payout)
+  const qYes = Number(market.qYes) / 1e16
+  const qNo = Number(market.qNo) / 1e16
   const b = Number(market.liquidityParam) / 1e18
 
   // If no shares have been purchased yet, return 50/50
@@ -37,11 +38,4 @@ export function calculateMarketPrices(market: Market) {
     yesPricePercent: yesPrice * 100,
     noPricePercent: noPrice * 100,
   }
-}
-
-/**
- * Calculate total volume (in BNB) for a market
- */
-export function calculateMarketVolume(market: Market): number {
-  return Number(market.qYes + market.qNo) / 1e18
 }
