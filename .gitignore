@@ -57,7 +57,3 @@ contract/build/
 # Temporary files
 *.tmp
 *.temp
-.kiro
-.gitignore
-inspiration/
-plan
