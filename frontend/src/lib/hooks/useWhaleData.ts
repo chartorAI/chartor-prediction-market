@@ -5,6 +5,7 @@ import {
   LIQUIDITY_MARKET_ABI,
   getContractAddresses,
   type MarketWhales,
+  type WhaleInfo,
 } from "@/lib/contracts"
 import type { Market, WhaleBet } from "@/types"
 
@@ -57,7 +58,19 @@ export function useWhaleData(market: Market | null) {
       return
     }
 
-    const whaleData = data[0].result as unknown as MarketWhales
+    const result = data[0].result
+
+    // Handle both array and object formats
+    // Wagmi returns Solidity tuples as arrays [largestYes, largestNo]
+    let whaleData: MarketWhales
+    if (Array.isArray(result)) {
+      whaleData = {
+        largestYes: result[0] as WhaleInfo,
+        largestNo: result[1] as WhaleInfo,
+      }
+    } else {
+      whaleData = result as unknown as MarketWhales
+    }
 
     if (!whaleData || !whaleData.largestYes || !whaleData.largestNo) {
       setWhales([])
@@ -169,7 +182,19 @@ export function useWhalesData(markets: Market[]) {
       const result = data[index]
 
       if (result?.status === "success") {
-        const whaleData = result.result as unknown as MarketWhales
+        const resultData = result.result
+
+        // Handle both array and object formats
+        // Wagmi returns Solidity tuples as arrays [largestYes, largestNo]
+        let whaleData: MarketWhales
+        if (Array.isArray(resultData)) {
+          whaleData = {
+            largestYes: resultData[0] as WhaleInfo,
+            largestNo: resultData[1] as WhaleInfo,
+          }
+        } else {
+          whaleData = resultData as unknown as MarketWhales
+        }
 
         if (!whaleData || !whaleData.largestYes || !whaleData.largestNo) {
           return
