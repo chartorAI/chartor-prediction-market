@@ -2,7 +2,7 @@ import { useState, useCallback } from "react"
 import { type Address } from "viem"
 import { useContract } from "./useContract"
 import { useMarketStore } from "@/stores/marketStore"
-import { toast } from "@/components/common/Toast"
+import { toast, transactionToast } from "@/components/common/Toast"
 import {
   PREDICTION_MARKET_ABI,
   LIQUIDITY_MARKET_ABI,
@@ -39,23 +39,6 @@ interface UseTradeReturn {
  * - Handles errors with user-friendly messages
  * - Refreshes market data after successful trade
  *
- * @example
- * ```tsx
- * const { executeTrade, isExecuting, error } = useTrade()
- *
- * const handleTrade = async () => {
- *   const result = await executeTrade({
- *     market,
- *     shares: BigInt(100),
- *     isYes: true,
- *     cost: BigInt(1000000000000000000)
- *   })
- *
- *   if (result.success) {
- *     console.log('Trade successful:', result.txHash)
- *   }
- * }
- * ```
  */
 export const useTrade = (): UseTradeReturn => {
   const [isExecuting, setIsExecuting] = useState(false)
@@ -93,10 +76,6 @@ export const useTrade = (): UseTradeReturn => {
         return { success: false, error: errorMsg }
       }
 
-      // Note: Balance check is not needed here because Biconomy will handle
-      // insufficient balance errors and throw during transaction execution
-
-      // Check if market has expired
       const now = Math.floor(Date.now() / 1000)
       if (market.deadline < now) {
         const errorMsg = "This market has expired"
@@ -105,7 +84,6 @@ export const useTrade = (): UseTradeReturn => {
         return { success: false, error: errorMsg }
       }
 
-      // Check if market is already resolved
       if (market.resolved) {
         const errorMsg = "This market has already been resolved"
         setError(errorMsg)
@@ -116,23 +94,20 @@ export const useTrade = (): UseTradeReturn => {
       setIsExecuting(true)
       setError(null)
 
-      // Show loading toast
       const loadingToastId = toast.loading(
         `Buying ${isYes ? "YES" : "NO"} shares...`
       )
 
       try {
-        const chainId = 97 // BNB Testnet
+        const chainId = 97
         const addresses = getContractAddresses(chainId)
 
-        // Determine contract details based on market type
         const isPriceMarket = market.type === "PRICE"
         const contractAddress = isPriceMarket
           ? addresses.predictionMarket
           : addresses.liquidityMarket
         const abi = isPriceMarket ? PREDICTION_MARKET_ABI : LIQUIDITY_MARKET_ABI
 
-        // Execute trade through Smart Account
         const txHash = await writeContract({
           address: contractAddress,
           abi: abi as unknown as any[],
@@ -141,18 +116,14 @@ export const useTrade = (): UseTradeReturn => {
           value: cost,
         })
 
-        // Dismiss loading toast
         toast.dismiss(loadingToastId)
 
-        // Show success notification with transaction hash
-        const bscScanUrl = `https://testnet.bscscan.com/tx/${txHash}`
-        toast.success(
-          `Trade successful! View on BSCScan: ${txHash.slice(0, 10)}...`
-        )
+        // Show success notification with clickable transaction hash
+        transactionToast.success(txHash)
 
         console.log("Trade executed successfully:", {
           txHash,
-          bscScanUrl,
+          bscScanUrl: `https://testnet.bscscan.com/tx/${txHash}`,
           market: market.id,
           shares: shares.toString(),
           isYes,
@@ -161,7 +132,6 @@ export const useTrade = (): UseTradeReturn => {
 
         return { success: true, txHash }
       } catch (err: any) {
-        // Dismiss loading toast
         toast.dismiss(loadingToastId)
 
         // Parse error message
@@ -180,7 +150,6 @@ export const useTrade = (): UseTradeReturn => {
           } else if (err.message.includes("gas")) {
             errorMessage = "Gas estimation failed. Please try again."
           } else {
-            // Use the error message if it's reasonably short
             errorMessage =
               err.message.length < 100
                 ? err.message

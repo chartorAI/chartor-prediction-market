@@ -80,8 +80,32 @@ export const transactionToast = {
   pending: (txHash: string) => {
     return toast.loading(`Transaction pending: ${txHash.slice(0, 10)}...`)
   },
-  success: (txHash: string) => {
-    toast.success(`Transaction confirmed: ${txHash.slice(0, 10)}...`)
+  success: (txHash: string, chainId: number = 97) => {
+    const bscScanUrl =
+      chainId === 97
+        ? `https://testnet.bscscan.com/tx/${txHash}`
+        : `https://bscscan.com/tx/${txHash}`
+    const shortHash = `${txHash.slice(0, 10)}...${txHash.slice(-8)}`
+
+    hotToast.success(
+      (t) => (
+        <div className="flex flex-col gap-1">
+          <div className="font-semibold">Trade successful!</div>
+          <a
+            href={bscScanUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-400 hover:text-blue-300 underline cursor-pointer"
+            onClick={() => hotToast.dismiss(t.id)}
+          >
+            View on BSCScan: {shortHash}
+          </a>
+        </div>
+      ),
+      {
+        duration: 6000,
+      }
+    )
   },
   error: (error: string) => {
     toast.error(`Transaction failed: ${error}`)
