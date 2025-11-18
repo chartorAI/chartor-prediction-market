@@ -25,7 +25,8 @@ export function MarketCard({
 
   // Computed values
   const marketBalance = details?.marketBalance || BigInt(0)
-  const assetName = market.type === "PRICE" ? market.asset : "BNB/USDT"
+  const assetName = market.type === "PRICE" ? market.asset : "LIQUIDITY"
+  const isLiquidity = market.type === "LIQUIDITY"
 
   // Get YES and NO whales
   const yesWhale = whales.find((w) => w.isYes)
@@ -70,13 +71,22 @@ export function MarketCard({
 
   const cardContent = (
     <div
-      className={`bg-gradient-to-br from-white/[0.12] to-white/[0.05] border border-white/10 backdrop-blur-xl p-5 rounded-2xl hover:from-white/[0.15] hover:to-white/[0.08] hover:border-white/20 transition-all duration-300 h-full flex flex-col shadow-lg ${className}`}
+      className={`bg-gradient-to-br backdrop-blur-xl p-5 rounded-2xl transition-all duration-300 h-full flex flex-col shadow-lg ${
+        isLiquidity
+          ? "from-purple-500/8 to-purple-600/3 border border-purple-500/15 hover:from-purple-500/10 hover:to-purple-600/5 hover:border-purple-500/25"
+          : "from-white/12 to-white/5 border border-white/10 hover:from-white/15 hover:to-white/8 hover:border-white/20"
+      } ${className}`}
     >
       {/* Header: Asset badge and volume */}
       <div className="flex items-center justify-between mb-4">
-        <span className="text-xs font-bold text-primary uppercase px-3 py-1.5 bg-primary/20 rounded-lg border border-primary/30">
-          {assetName}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-primary uppercase px-3 py-1.5 bg-primary/20 rounded-lg border border-primary/30">
+            {assetName}
+          </span>
+          <span className="text-xs text-white/70 font-mono font-semibold">
+            #{market.id}
+          </span>
+        </div>
         <div className="flex items-center gap-1.5">
           <div className="w-1.5 h-1.5 rounded-full bg-primary/60"></div>
           <span className="text-xs text-white/60 font-medium">

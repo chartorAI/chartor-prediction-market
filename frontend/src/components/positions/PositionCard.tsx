@@ -13,20 +13,29 @@ interface PositionCardProps {
 export function PositionCard({ position, className }: PositionCardProps) {
   const { market } = position
   const isResolved = market.resolved
-  const assetName = market.type === "PRICE" ? market.asset : "BNB/USDT"
+  const assetName = market.type === "PRICE" ? market.asset : "LIQUIDITY"
+  const isLiquidity = market.type === "LIQUIDITY"
 
   return (
     <div
       className={cn(
-        "bg-gradient-to-br from-white/12 to-white/5 border border-white/10 backdrop-blur-xl p-4 rounded-2xl transition-all duration-300 shadow-lg",
+        "bg-gradient-to-br backdrop-blur-xl p-4 rounded-2xl transition-all duration-300 shadow-lg",
+        isLiquidity
+          ? "from-purple-500/8 to-purple-600/3 border border-purple-500/15"
+          : "from-white/12 to-white/5 border border-white/10",
         className
       )}
     >
       {/* Header: Asset badge and status */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-bold text-primary uppercase px-2 py-1 bg-primary/20 rounded-lg border border-primary/30">
-          {assetName}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-primary uppercase px-2 py-1 bg-primary/20 rounded-lg border border-primary/30">
+            {assetName}
+          </span>
+          <span className="text-xs text-white/70 font-mono font-semibold">
+            #{market.id}
+          </span>
+        </div>
         {isResolved && (
           <span
             className={cn(
@@ -49,13 +58,13 @@ export function PositionCard({ position, className }: PositionCardProps) {
       {/* Shares Owned */}
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-          <div className="text-xs text-white/50 mb-1">YES</div>
+          <div className="text-xs text-white/50 mb-1">YES Shares</div>
           <div className="text-lg font-bold font-mono text-success/90">
             {formatBigInt(position.yesShares, 16, 2)}
           </div>
         </div>
         <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-          <div className="text-xs text-white/50 mb-1">NO</div>
+          <div className="text-xs text-white/50 mb-1">NO Shares</div>
           <div className="text-lg font-bold font-mono text-error/90">
             {formatBigInt(position.noShares, 16, 2)}
           </div>
