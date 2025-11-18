@@ -3,6 +3,7 @@ import { create } from "zustand"
 interface AuthState {
   isAuthenticated: boolean
   userAddress: string | null
+  smartAccountAddress: string | null
   smartAccount: any | null
   web3AuthProvider: any | null
   balance: bigint | null
@@ -10,7 +11,12 @@ interface AuthState {
   error: string | null
 
   // Actions
-  setAuthenticated: (address: string, smartAccount: any, provider: any) => void
+  setAuthenticated: (
+    address: string,
+    smartAccount: any,
+    provider: any,
+    smartAccountAddress: string
+  ) => void
   setBalance: (balance: bigint) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
@@ -20,16 +26,18 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   userAddress: null,
+  smartAccountAddress: null,
   smartAccount: null,
   web3AuthProvider: null,
   balance: null,
   isLoading: false,
   error: null,
 
-  setAuthenticated: (address, smartAccount, provider) =>
+  setAuthenticated: (address, smartAccount, provider, smartAccountAddress) =>
     set({
       isAuthenticated: true,
       userAddress: address,
+      smartAccountAddress,
       smartAccount,
       web3AuthProvider: provider,
       error: null,
@@ -45,6 +53,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       isAuthenticated: false,
       userAddress: null,
+      smartAccountAddress: null,
       smartAccount: null,
       web3AuthProvider: null,
       balance: null,

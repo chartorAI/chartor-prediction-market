@@ -1,7 +1,7 @@
 // Hook for fetching and managing market data
 
-import { useEffect, useCallback } from "react"
-import { useReadContract, useReadContracts } from "wagmi"
+import { useEffect, useCallback, useMemo } from "react"
+import { useReadContracts } from "wagmi"
 import { useMarketStore } from "@/stores/marketStore"
 import {
   PREDICTION_MARKET_ABI,
@@ -22,26 +22,86 @@ export function useMarkets() {
   const chainId = 97 // BNB Testnet
   const addresses = getContractAddresses(chainId)
 
-  // Fetch active market IDs from PredictionMarket
-  const { data: priceMarketIds, isLoading: loadingPriceIds } = useReadContract({
-    address: addresses.predictionMarket,
-    abi: PREDICTION_MARKET_ABI,
-    functionName: "getActiveMarkets",
-    query: {
-      refetchInterval: POLLING_INTERVAL,
-    },
-  })
-
-  // Fetch active market IDs from LiquidityMarket
-  const { data: liquidityMarketIds, isLoading: loadingLiquidityIds } =
-    useReadContract({
-      address: addresses.liquidityMarket,
-      abi: LIQUIDITY_MARKET_ABI,
-      functionName: "getActiveMarkets",
+  // Fetch active, resolved, and expired market IDs from both contracts
+  const { data: priceMarketData, isLoading: loadingPriceIds } =
+    useReadContracts({
+      contracts: [
+        {
+          address: addresses.predictionMarket,
+          abi: PREDICTION_MARKET_ABI,
+          functionName: "getActiveMarkets",
+        },
+        {
+          address: addresses.predictionMarket,
+          abi: PREDICTION_MARKET_ABI,
+          functionName: "getResolvedMarkets",
+        },
+        {
+          address: addresses.predictionMarket,
+          abi: PREDICTION_MARKET_ABI,
+          functionName: "getExpiredUnresolvedMarkets",
+        },
+      ],
       query: {
         refetchInterval: POLLING_INTERVAL,
       },
     })
+
+  const { data: liquidityMarketData, isLoading: loadingLiquidityIds } =
+    useReadContracts({
+      contracts: [
+        {
+          address: addresses.liquidityMarket,
+          abi: LIQUIDITY_MARKET_ABI,
+          functionName: "getActiveMarkets",
+        },
+        {
+          address: addresses.liquidityMarket,
+          abi: LIQUIDITY_MARKET_ABI,
+          functionName: "getResolvedMarkets",
+        },
+        {
+          address: addresses.liquidityMarket,
+          abi: LIQUIDITY_MARKET_ABI,
+          functionName: "getExpiredUnresolvedMarkets",
+        },
+      ],
+      query: {
+        refetchInterval: POLLING_INTERVAL,
+      },
+    })
+
+  // Combine all market IDs (active, resolved, expired) - memoized to prevent infinite loops
+  // Use Set to remove duplicates in case a market appears in multiple categories
+  const priceMarketIds = useMemo(() => {
+    const active = (priceMarketData?.[0]?.result as bigint[]) || []
+    const resolved = (priceMarketData?.[1]?.result as bigint[]) || []
+    const expired = (priceMarketData?.[2]?.result as bigint[]) || []
+    const ids = [...active, ...resolved, ...expired]
+    // Remove duplicates by converting to Set and back
+    return Array.from(new Set(ids.map((id) => id.toString()))).map((id) =>
+      BigInt(id)
+    )
+  }, [
+    priceMarketData?.[0]?.result,
+    priceMarketData?.[1]?.result,
+    priceMarketData?.[2]?.result,
+  ])
+
+  const liquidityMarketIds = useMemo(() => {
+    const active = (liquidityMarketData?.[0]?.result as bigint[]) || []
+    const resolved = (liquidityMarketData?.[1]?.result as bigint[]) || []
+    const expired = (liquidityMarketData?.[2]?.result as bigint[]) || []
+    const ids = [...active, ...resolved, ...expired]
+    // Remove duplicates by converting to Set and back
+    return Array.from(new Set(ids.map((id) => id.toString()))).map((id) =>
+      BigInt(id)
+    )
+  }, [
+    liquidityMarketData?.[0]?.result,
+    liquidityMarketData?.[1]?.result,
+    liquidityMarketData?.[2]?.result,
+  ])
 
   // Fetch total market counts from both contracts
   const { data: marketCounts } = useReadContracts({
@@ -66,77 +126,83 @@ export function useMarkets() {
     Number(marketCounts?.[0]?.result || 0) +
     Number(marketCounts?.[1]?.result || 0)
 
-  const priceMarketContracts =
-    priceMarketIds?.flatMap((id) => [
-      {
-        address: addresses.predictionMarket,
-        abi: PREDICTION_MARKET_ABI,
-        functionName: "getMarket" as const,
-        args: [id],
-      },
-      {
-        address: addresses.predictionMarket,
-        abi: PREDICTION_MARKET_ABI,
-        functionName: "qYes" as const,
-        args: [id],
-      },
-      {
-        address: addresses.predictionMarket,
-        abi: PREDICTION_MARKET_ABI,
-        functionName: "qNo" as const,
-        args: [id],
-      },
-      {
-        address: addresses.predictionMarket,
-        abi: PREDICTION_MARKET_ABI,
-        functionName: "resolved" as const,
-        args: [id],
-      },
-    ]) || []
+  const priceMarketContracts = useMemo(
+    () =>
+      priceMarketIds.flatMap((id) => [
+        {
+          address: addresses.predictionMarket,
+          abi: PREDICTION_MARKET_ABI,
+          functionName: "getMarket" as const,
+          args: [id],
+        },
+        {
+          address: addresses.predictionMarket,
+          abi: PREDICTION_MARKET_ABI,
+          functionName: "qYes" as const,
+          args: [id],
+        },
+        {
+          address: addresses.predictionMarket,
+          abi: PREDICTION_MARKET_ABI,
+          functionName: "qNo" as const,
+          args: [id],
+        },
+        {
+          address: addresses.predictionMarket,
+          abi: PREDICTION_MARKET_ABI,
+          functionName: "resolved" as const,
+          args: [id],
+        },
+      ]),
+    [priceMarketIds, addresses.predictionMarket]
+  )
 
-  const { data: priceMarketData, isLoading: loadingPriceData } =
+  const { data: priceMarketDetailsData, isLoading: loadingPriceData } =
     useReadContracts({
       contracts: priceMarketContracts,
       query: {
-        enabled: !!priceMarketIds && priceMarketIds.length > 0,
+        enabled: priceMarketIds.length > 0,
         refetchInterval: POLLING_INTERVAL,
       },
     })
 
   // Fetch market details for liquidity markets (config, qYes, qNo, resolved)
-  const liquidityMarketContracts =
-    liquidityMarketIds?.flatMap((id) => [
-      {
-        address: addresses.liquidityMarket,
-        abi: LIQUIDITY_MARKET_ABI,
-        functionName: "getMarket" as const,
-        args: [id],
-      },
-      {
-        address: addresses.liquidityMarket,
-        abi: LIQUIDITY_MARKET_ABI,
-        functionName: "qYes" as const,
-        args: [id],
-      },
-      {
-        address: addresses.liquidityMarket,
-        abi: LIQUIDITY_MARKET_ABI,
-        functionName: "qNo" as const,
-        args: [id],
-      },
-      {
-        address: addresses.liquidityMarket,
-        abi: LIQUIDITY_MARKET_ABI,
-        functionName: "resolved" as const,
-        args: [id],
-      },
-    ]) || []
+  const liquidityMarketContracts = useMemo(
+    () =>
+      liquidityMarketIds.flatMap((id) => [
+        {
+          address: addresses.liquidityMarket,
+          abi: LIQUIDITY_MARKET_ABI,
+          functionName: "getMarket" as const,
+          args: [id],
+        },
+        {
+          address: addresses.liquidityMarket,
+          abi: LIQUIDITY_MARKET_ABI,
+          functionName: "qYes" as const,
+          args: [id],
+        },
+        {
+          address: addresses.liquidityMarket,
+          abi: LIQUIDITY_MARKET_ABI,
+          functionName: "qNo" as const,
+          args: [id],
+        },
+        {
+          address: addresses.liquidityMarket,
+          abi: LIQUIDITY_MARKET_ABI,
+          functionName: "resolved" as const,
+          args: [id],
+        },
+      ]),
+    [liquidityMarketIds, addresses.liquidityMarket]
+  )
 
-  const { data: liquidityMarketData, isLoading: loadingLiquidityData } =
+  const { data: liquidityMarketDetailsData, isLoading: loadingLiquidityData } =
     useReadContracts({
       contracts: liquidityMarketContracts,
       query: {
-        enabled: !!liquidityMarketIds && liquidityMarketIds.length > 0,
+        enabled: liquidityMarketIds.length > 0,
         refetchInterval: POLLING_INTERVAL,
       },
     })
@@ -148,21 +214,25 @@ export function useMarkets() {
       loadingLiquidityIds ||
       loadingPriceData ||
       loadingLiquidityData
-    setLoading(isLoading)
 
-    if (isLoading) return
+    if (isLoading) {
+      setLoading(true)
+      return
+    }
+
+    setLoading(false)
 
     try {
       const allMarkets: Market[] = []
 
       // Process price markets (each market has 4 contract calls: config, qYes, qNo, resolved)
-      if (priceMarketIds && priceMarketData) {
+      if (priceMarketIds.length > 0 && priceMarketDetailsData) {
         priceMarketIds.forEach((id, index) => {
           const baseIndex = index * 4
-          const configResult = priceMarketData[baseIndex]
-          const qYesResult = priceMarketData[baseIndex + 1]
-          const qNoResult = priceMarketData[baseIndex + 2]
-          const resolvedResult = priceMarketData[baseIndex + 3]
+          const configResult = priceMarketDetailsData[baseIndex]
+          const qYesResult = priceMarketDetailsData[baseIndex + 1]
+          const qNoResult = priceMarketDetailsData[baseIndex + 2]
+          const resolvedResult = priceMarketDetailsData[baseIndex + 3]
 
           if (
             configResult?.status === "success" &&
@@ -205,13 +275,13 @@ export function useMarkets() {
       }
 
       // Process liquidity markets (each market has 4 contract calls: config, qYes, qNo, resolved)
-      if (liquidityMarketIds && liquidityMarketData) {
+      if (liquidityMarketIds.length > 0 && liquidityMarketDetailsData) {
         liquidityMarketIds.forEach((id, index) => {
           const baseIndex = index * 4
-          const configResult = liquidityMarketData[baseIndex]
-          const qYesResult = liquidityMarketData[baseIndex + 1]
-          const qNoResult = liquidityMarketData[baseIndex + 2]
-          const resolvedResult = liquidityMarketData[baseIndex + 3]
+          const configResult = liquidityMarketDetailsData[baseIndex]
+          const qYesResult = liquidityMarketDetailsData[baseIndex + 1]
+          const qNoResult = liquidityMarketDetailsData[baseIndex + 2]
+          const resolvedResult = liquidityMarketDetailsData[baseIndex + 3]
 
           if (
             configResult?.status === "success" &&
@@ -259,15 +329,15 @@ export function useMarkets() {
   }, [
     priceMarketIds,
     liquidityMarketIds,
-    priceMarketData,
-    liquidityMarketData,
+    priceMarketDetailsData,
+    liquidityMarketDetailsData,
     loadingPriceIds,
     loadingLiquidityIds,
     loadingPriceData,
     loadingLiquidityData,
     setMarkets,
-    setLoading,
     setError,
+    setLoading,
     addresses.liquidityMarket,
   ])
 

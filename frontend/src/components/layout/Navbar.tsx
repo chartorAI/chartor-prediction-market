@@ -21,6 +21,7 @@ export function Navbar({ className }: NavbarProps) {
     { label: "Home", href: "/" },
     { label: "Price Markets", href: "/markets/price" },
     { label: "Liquidity Markets", href: "/markets/liquidity" },
+    ...(isAuthenticated ? [{ label: "My Positions", href: "/positions" }] : []),
   ]
 
   const isActiveTab = (href: string) => {

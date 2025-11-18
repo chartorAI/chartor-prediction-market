@@ -1,8 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { LoadingSpinner } from "@/components/common/LoadingSpinner"
 import { PositionCard } from "./PositionCard"
 import { useFilteredPositions } from "@/lib/hooks/useUserPositions"
@@ -28,38 +26,44 @@ export function PositionList({ className }: PositionListProps) {
   return (
     <div className={className}>
       {/* Filter Tabs */}
-      <Tabs
-        value={filter}
-        onValueChange={(value) => setFilter(value as "active" | "resolved")}
-        className="mb-6"
-      >
-        <TabsList>
-          <TabsTrigger value="active">Active ({count})</TabsTrigger>
-          <TabsTrigger value="resolved">Resolved</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setFilter("active")}
+          className={`
+            px-6 py-2.5 rounded-lg font-semibold text-sm whitespace-nowrap transition-all
+            ${
+              filter === "active"
+                ? "bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg"
+                : "bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+            }
+          `}
+        >
+          Active
+        </button>
+        <button
+          onClick={() => setFilter("resolved")}
+          className={`
+            px-6 py-2.5 rounded-lg font-semibold text-sm whitespace-nowrap transition-all
+            ${
+              filter === "resolved"
+                ? "bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg"
+                : "bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+            }
+          `}
+        >
+          Resolved
+        </button>
+      </div>
 
       {/* Positions Grid */}
       {count === 0 ? (
         <EmptyState filter={filter} />
       ) : (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {positions.map((position, index) => (
-            <motion.div
-              key={position.marketId}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-            >
-              <PositionCard position={position} />
-            </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {positions.map((position) => (
+            <PositionCard key={position.marketId} position={position} />
           ))}
-        </motion.div>
+        </div>
       )}
     </div>
   )
@@ -74,18 +78,18 @@ function EmptyState({ filter }: EmptyStateProps) {
 
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="glass-card p-8 rounded-2xl max-w-md w-full text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-glass-medium flex items-center justify-center">
+      <div className="bg-white/5 border border-white/10 backdrop-blur-xl p-12 rounded-3xl max-w-md w-full text-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
           {isActive ? (
             <TrendingUp className="w-8 h-8 text-primary" />
           ) : (
-            <Package className="w-8 h-8 text-text-secondary" />
+            <Package className="w-8 h-8 text-white/60" />
           )}
         </div>
-        <h3 className="text-xl font-semibold text-text-primary mb-2">
+        <h3 className="text-xl font-semibold text-white mb-2">
           {isActive ? "No Active Positions" : "No Resolved Positions"}
         </h3>
-        <p className="text-text-secondary mb-6">
+        <p className="text-white/60 mb-6">
           {isActive
             ? "You don't have any active positions yet. Start trading on prediction markets to see your positions here."
             : "You don't have any resolved positions. Your completed markets will appear here once they're settled."}
@@ -93,7 +97,7 @@ function EmptyState({ filter }: EmptyStateProps) {
         {isActive && (
           <a
             href="/markets/price"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-gradient-to-br from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-medium transition-all shadow-lg"
           >
             Browse Markets
           </a>

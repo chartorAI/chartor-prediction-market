@@ -1,8 +1,8 @@
 // Hook for fetching and managing user positions
 
 import { useEffect, useState } from "react"
-import { useAccount } from "wagmi"
 import { useReadContracts } from "wagmi"
+import { useAuthStore } from "@/stores/authStore"
 import {
   PREDICTION_MARKET_ABI,
   LIQUIDITY_MARKET_ABI,
@@ -17,12 +17,15 @@ const POLLING_INTERVAL = 10000 // 10 seconds
  * Hook to fetch all user positions across all markets
  */
 export function useUserPositions() {
-  const { address } = useAccount()
+  const { smartAccountAddress } = useAuthStore()
   const { allMarkets } = useMarkets()
   const chainId = 97 // BNB Testnet
   const addresses = getContractAddresses(chainId)
 
   const [positions, setPositions] = useState<Position[]>([])
+
+  // Use smart account address
+  const address = smartAccountAddress
 
   // Prepare contract calls to fetch positions for all markets
   const contracts = allMarkets.flatMap((market) => {
@@ -53,15 +56,39 @@ export function useUserPositions() {
 
   // Process position data
   useEffect(() => {
-    if (!data || !address) return
+    if (!data || !address) {
+      console.log("🔍 useUserPositions: No data or address", {
+        data: !!data,
+        address,
+      })
+      return
+    }
+
+    console.log("🔍 useUserPositions: Processing positions", {
+      address,
+      totalMarkets: allMarkets.length,
+      dataLength: data.length,
+    })
 
     const userPositions: Position[] = []
 
     allMarkets.forEach((market, index) => {
       const result = data[index]
 
+      console.log(`📊 Market ${market.id}:`, {
+        status: result?.status,
+        hasResult: !!result?.result,
+        result: result?.result,
+      })
+
       if (result?.status === "success" && result.result) {
         const positionData = result.result as any
+
+        console.log(`  Position data:`, {
+          yesShares: positionData.yesShares?.toString(),
+          noShares: positionData.noShares?.toString(),
+          totalStaked: positionData.totalStaked?.toString(),
+        })
 
         // Only include positions where user has shares
         if (
@@ -78,10 +105,14 @@ export function useUserPositions() {
           }
 
           userPositions.push(position)
+          console.log(`  ✅ Added position for market ${market.id}`)
+        } else {
+          console.log(`  ❌ No shares for market ${market.id}`)
         }
       }
     })
 
+    console.log("📈 Total positions found:", userPositions.length)
     setPositions(userPositions)
   }, [data, allMarkets, address])
 
@@ -103,9 +134,12 @@ export function useUserPositions() {
  * Hook to fetch a single user position for a specific market
  */
 export function useUserPosition(market: Market | null) {
-  const { address } = useAccount()
+  const { smartAccountAddress } = useAuthStore()
   const chainId = 97 // BNB Testnet
   const addresses = getContractAddresses(chainId)
+
+  // Use smart account address
+  const address = smartAccountAddress
 
   const isPriceMarket = market?.type === "PRICE"
   const contractAddress = isPriceMarket

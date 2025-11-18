@@ -77,8 +77,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const provider = await loginWithWeb3Auth()
       if (provider) {
         const smartAccount = await createSmartAccount(provider)
-        const address = await getSmartAccountAddress(smartAccount)
-        setAuthenticated(address, smartAccount, provider)
+        const smartAccountAddress = await getSmartAccountAddress(smartAccount)
+        setAuthenticated(
+          smartAccountAddress,
+          smartAccount,
+          provider,
+          smartAccountAddress
+        )
       }
     } catch (error: any) {
       console.error("Failed to restore session:", {
@@ -103,9 +108,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Create Smart Account
       const smartAccount = await createSmartAccount(provider)
-      const address = await getSmartAccountAddress(smartAccount)
+      const smartAccountAddress = await getSmartAccountAddress(smartAccount)
 
-      setAuthenticated(address, smartAccount, provider)
+      setAuthenticated(
+        smartAccountAddress,
+        smartAccount,
+        provider,
+        smartAccountAddress
+      )
     } catch (error: any) {
       console.error("Login failed:", {
         message: error?.message,
