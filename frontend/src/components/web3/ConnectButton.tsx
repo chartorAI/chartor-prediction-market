@@ -1,17 +1,27 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Wallet, LogOut, Copy, Check, ChevronDown, User } from "lucide-react"
+import {
+  Wallet,
+  LogOut,
+  Copy,
+  Check,
+  ChevronDown,
+  User,
+  ArrowRight,
+} from "lucide-react"
 import { useAuth } from "@/lib/web3/AuthProvider"
 import { useAuthStore } from "@/stores/authStore"
 import { useBalance } from "@/lib/hooks/useBalance"
 import { truncateAddress, formatBigInt } from "@/lib/utils/format"
 import { cn } from "@/lib/utils/cn"
 import { toast } from "react-hot-toast"
+import { WithdrawModal } from "./WithdrawModal"
 
 export function ConnectButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const { login, logout } = useAuth()
@@ -200,7 +210,24 @@ export function ConnectButton() {
           </div>
 
           {/* Actions */}
-          <div className="p-2">
+          <div className="p-2 space-y-1">
+            <button
+              onClick={() => {
+                setShowWithdrawModal(true)
+                setIsOpen(false)
+              }}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg",
+                "text-sm font-semibold text-white/80 hover:text-white",
+                "hover:bg-primary/10 hover:border-primary/20 border border-transparent",
+                "transition-all group"
+              )}
+            >
+              <div className="p-1.5 rounded-md bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                <ArrowRight className="w-4 h-4 text-primary" />
+              </div>
+              <span>Withdraw Funds</span>
+            </button>
             <button
               onClick={handleLogout}
               className={cn(
@@ -218,6 +245,12 @@ export function ConnectButton() {
           </div>
         </div>
       )}
+
+      {/* Withdraw Modal */}
+      <WithdrawModal
+        isOpen={showWithdrawModal}
+        onClose={() => setShowWithdrawModal(false)}
+      />
     </div>
   )
 }
