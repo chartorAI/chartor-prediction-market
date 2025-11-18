@@ -112,14 +112,44 @@ export const sendTransaction = async (
 
     console.log("User operation sent, waiting for confirmation...")
 
-    const transactionDetails = await userOpResponse.wait()
+    // Wait for the transaction to be mined
+    const { receipt, success } = await userOpResponse.wait()
 
-    console.log("Transaction confirmed:", {
-      hash: transactionDetails.receipt.transactionHash,
-      status: transactionDetails.success,
-    })
+    console.log("=== TRANSACTION RESULT ===")
+    console.log("Biconomy success flag:", success)
+    console.log("Receipt status:", receipt.status)
+    console.log("Transaction hash:", receipt.transactionHash)
+    console.log("==========================")
 
-    return transactionDetails.receipt.transactionHash
+    // CRITICAL: With Biconomy Smart Accounts, the UserOp transaction can succeed (status=1)
+    // even if the internal contract call reverts. The 'success' flag from Biconomy
+    // indicates whether the actual contract execution succeeded.
+    // Handle both boolean and string representations
+    const isContractSuccess = String(success) === "true"
+    if (!isContractSuccess) {
+      console.error(
+        "❌ Contract execution reverted (insufficient balance or contract error)"
+      )
+      console.error("Receipt:", receipt)
+      throw new Error(
+        "Transaction failed. Insufficient balance or contract error."
+      )
+    }
+
+    // Also check receipt status as a fallback
+    const txStatus =
+      typeof receipt.status === "string"
+        ? parseInt(receipt.status, 16)
+        : receipt.status
+
+    if (txStatus === 0) {
+      console.error("❌ Transaction reverted on-chain")
+      console.error("Receipt:", receipt)
+      throw new Error("Transaction failed on-chain.")
+    }
+
+    console.log("✅ Transaction successful!")
+    return receipt.transactionHash
   } catch (error: any) {
     console.error("=== TRANSACTION FAILED ===")
     console.error("Error object:", error)

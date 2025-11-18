@@ -61,7 +61,7 @@ export const useTrade = (): UseTradeReturn => {
   const [isExecuting, setIsExecuting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { writeContract, isConnected } = useContract()
+  const { writeContract, isConnected, smartAccount } = useContract()
   const { setMarkets } = useMarketStore()
 
   const executeTrade = useCallback(
@@ -92,6 +92,9 @@ export const useTrade = (): UseTradeReturn => {
         toast.error(errorMsg)
         return { success: false, error: errorMsg }
       }
+
+      // Note: Balance check is not needed here because Biconomy will handle
+      // insufficient balance errors and throw during transaction execution
 
       // Check if market has expired
       const now = Math.floor(Date.now() / 1000)
@@ -155,7 +158,6 @@ export const useTrade = (): UseTradeReturn => {
           isYes,
           cost: cost.toString(),
         })
-
 
         return { success: true, txHash }
       } catch (err: any) {

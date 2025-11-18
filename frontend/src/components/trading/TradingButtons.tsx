@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import toast from "react-hot-toast"
 import { TradingModal } from "./TradingModal"
 import { useAuthStore } from "@/stores/authStore"
-import { calculateMarketPrices } from "@/lib/utils/marketPrices"
+import { useMarketDetails } from "@/lib/hooks/useMarketDetails"
 import type { Market } from "@/types"
 
 interface TradingButtonsProps {
@@ -29,10 +29,20 @@ export function TradingButtons({
   const isResolved = market.resolved
   const isDisabled = isExpired || isResolved || isExecuting
 
-  // Calculate prices
-  const { yesPricePercent, noPricePercent } = calculateMarketPrices(market)
+  // Fetch prices from contract
+  const { details } = useMarketDetails(market)
+
+  // Contract returns prices as 1e18 decimals (e.g., 5e17 = 0.5 = 50%)
+  // Convert to percentage
+  const yesPricePercent = details?.yesPrice
+    ? (Number(details.yesPrice) / 1e18) * 100
+    : 50
+  const noPricePercent = details?.noPrice
+    ? (Number(details.noPrice) / 1e18) * 100
+    : 50
 
   // With 1e16 denomination: 1 share = 0.01 BNB payout
+  // Price in BNB = (price as decimal) * 0.01
   const yesPriceBNB = (yesPricePercent / 100) * 0.01
   const noPriceBNB = (noPricePercent / 100) * 0.01
 
